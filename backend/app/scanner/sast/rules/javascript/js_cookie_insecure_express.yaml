@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cookie
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Missing Secure or HttpOnly flags on session cookies exposes them to XSS and MitM theft.
+
+rule_id: js_cookie_insecure_express
+language: javascript
+vuln_class: Cookie Security
+severity: Medium
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: 'Cookie Security: Missing secure/httpOnly flags in res.cookie()'
+message: |-
+  Setting cookies via res.cookie() without specifying `{ secure: true, httpOnly: true }` exposes the session to XSS attacks and plaintext transmission leaks.
+sources: []
+sinks:
+- res.cookie(
+sanitizers:
+- 'secure: true'
+- 'httpOnly: true'
+remediation: |-
+  Always include `{ secure: true, httpOnly: true }` in the options object when calling res.cookie(). Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

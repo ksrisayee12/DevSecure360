@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserialization sinks verified from CodeQL standard libraries and OWASP Deserialization Cheat Sheet.
+
 rule_id: csharp_deser_binaryformatter
 language: csharp
 vuln_class: Deserialization
@@ -9,31 +16,10 @@ cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Confirmed
 issue: Insecure Deserialization via BinaryFormatter
 message: |-
-  Untrusted data is deserialized using BinaryFormatter or related classes. Attackers can execute arbitrary code upon deserialization.
-sources:
-- Request.QueryString[
-- Request.Form[
-- Request.Cookies[
-- Request.Headers[
-- Request.Params[
-- Request.Item[
-- HttpContext.Request.Query[
-- HttpContext.Request.Form[
-- Environment.GetEnvironmentVariable(
-- Environment.GetCommandLineArgs(
+  The application deserializes untrusted data using the dangerous `BinaryFormatter` class. This class is fundamentally insecure and cannot be made safe.
+sources: []
 sinks:
 - BinaryFormatter.Deserialize(
-- new BinaryFormatter(
-- LosFormatter.Deserialize(
-- ObjectStateFormatter.Deserialize(
-- NetDataContractSerializer.Deserialize(
 sanitizers: []
 remediation: |-
-  Do not use BinaryFormatter for deserialization; it is obsolete and inherently insecure. Use JsonSerializer or JsonConvert.
-
-  UNSAFE:
-    var formatter = new BinaryFormatter();
-    formatter.Deserialize(stream);
-
-  SAFE:
-    JsonSerializer.Deserialize<MyClass>(stream);
+  Completely remove `BinaryFormatter`. Migrate to a safe deserialization library such as `System.Text.Json`.

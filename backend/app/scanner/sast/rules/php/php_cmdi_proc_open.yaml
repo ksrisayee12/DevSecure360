@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    passthru(), popen(), proc_open() verified as dangerous from official php.net documentation.
+
+rule_id: php_cmdi_proc_open
+language: php
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via PHP proc_open() with user-controlled command argument
+message: |-
+  User-controlled data is passed to proc_open() as part of the command string or command array. proc_open() provides full bidirectional process communication pipes and executes via the shell. An attacker can inject shell commands to read sensitive files, exfiltrate data, or establish a reverse shell connection from the server.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- proc_open(
+sanitizers:
+- escapeshellarg(
+- escapeshellcmd(
+remediation: |-
+  Use array form of proc_open() with validated arguments to avoid shell interpretation.
+
+  UNSAFE:
+    proc_open("git clone " . $_POST["repo"], $descs, $pipes);
+
+  SAFE:
+    // Array form avoids shell expansion entirely
+    proc_open(["git", "clone", $_POST["repo"]], $descs, $pipes);
+
+  Validate inputs against an allowlist before use. See OWASP OS Command Injection Defense Cheat Sheet.

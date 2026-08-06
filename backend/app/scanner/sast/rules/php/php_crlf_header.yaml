@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/113.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=http+response+splitting
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    HTTP response splitting via unvalidated header values verified from CodeQL and Semgrep registry.
+
+rule_id: php_crlf_header
+language: php
+vuln_class: XSS
+severity: High
+cwe: CWE-113
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: HTTP Response Splitting via PHP header() with unvalidated user input containing
+  CR/LF
+message: |-
+  User-supplied input is incorporated into an HTTP header emitted via PHP's header() function without removing carriage-return (\r) and line-feed (\n) characters. An attacker can inject \r\n to terminate the current header and insert arbitrary headers (Set-Cookie, Location) or inject a second response body, enabling XSS, session fixation, or cache poisoning.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- header(
+- header_remove(
+sanitizers:
+- str_replace("\r", "",
+- preg_replace('/[\r\n]/'
+remediation: |-
+  Strip CR and LF characters from user input before using it in HTTP headers.
+
+  UNSAFE:
+    header('X-User: ' . $_GET['username']);
+
+  SAFE:
+    $safe = preg_replace('/[\r\n]+/', '', $_GET['username']);
+    header('X-User: ' . $safe);
+
+  PHP 7.2+ throws E_WARNING on CR/LF in header values, but older versions do not. Apply sanitization explicitly for backwards-compatible code. See OWASP HTTP Response Splitting defense guide.

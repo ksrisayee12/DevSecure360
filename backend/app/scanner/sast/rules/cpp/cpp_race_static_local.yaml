@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/14.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=memset+optimization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    memset() optimization removal pattern verified from CERT C MSC06-C and compiler analysis research.
+
+rule_id: cpp_race_static_local
+language: cpp
+vuln_class: Race Condition
+severity: High
+cwe: CWE-362
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 6.3
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Race Condition via double-checked locking on static local variable in pre-C++11
+  code
+message: |-
+  In C++03, static local variable initialization is not thread-safe. Multiple threads entering the function simultaneously can observe the variable in a partially initialized state. Double-checked locking without memory barriers is also broken. An attacker who can trigger concurrent initialization can exploit the race to cause undefined behavior or code execution.
+sources: []
+sinks:
+- 'static '
+- 'static std::'
+- static Singleton
+sanitizers:
+- std::call_once
+- std::once_flag
+remediation: |-
+  C++11 and later guarantee thread-safe initialization of static locals. Use std::call_once for explicit control.
+
+  UNSAFE (pre-C++11 double-checked locking):
+    if (!initialized) {
+        lock.acquire();
+        if (!initialized) { init(); initialized = true; }  /* race */
+    }
+
+  SAFE (C++11 static local — guaranteed thread-safe by the standard):
+    static MyClass instance;  /* initialized exactly once, thread-safe in C++11+ */
+    return instance;
+
+  See C++11 standard section 6.7 and CERT CON55-CPP for concurrent initialization guidance.

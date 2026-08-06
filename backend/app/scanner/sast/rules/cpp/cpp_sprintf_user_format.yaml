@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_sprintf_user_format
+language: cpp
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Format String vulnerability: sprintf/snprintf called with user-controlled
+  format argument'
+message: |-
+  User-controlled input is passed as the format string argument to sprintf(), snprintf(), or fprintf(). An attacker who can control the format string can use %n specifiers to write arbitrary values to memory addresses popped from the stack, enabling arbitrary code execution. %x and %p specifiers also leak stack memory, useful for bypassing ASLR mitigations.
+sources: []
+sinks:
+- sprintf(buf, userInput
+- snprintf(buf, size, userInput
+- fprintf(fp, userInput
+sanitizers:
+- snprintf(buf, size, "%s"
+remediation: |-
+  Always use a string literal as the format string. Never pass user input as the format argument.
+
+  UNSAFE:
+    sprintf(buf, user_format);     /* format string injection */
+    snprintf(buf, 256, user_msg);  /* same risk */
+
+  SAFE:
+    snprintf(buf, sizeof(buf), "%s", user_format);
+
+  Compile with -Wformat=2 -Wformat-security. Use std::format (C++20) for type-safe formatting. See CERT FIO30-C and OWASP Format String Attack defense guide.

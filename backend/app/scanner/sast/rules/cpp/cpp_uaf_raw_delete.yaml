@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/416.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based flow detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Use-after-free pattern detection verified from CodeQL C/C++ memory safety standard libraries. Rule is Tentative.
+
+rule_id: cpp_uaf_raw_delete
+language: cpp
+vuln_class: Use After Free
+severity: Critical
+cwe: CWE-416
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Use-After-Free via Raw delete
+message: |-
+  The application manually deletes a raw pointer and subsequently dereferences it. This can lead to arbitrary code execution or crashes.
+sources: []
+sinks:
+- delete
+sanitizers: []
+remediation: |-
+  Avoid using raw pointers and manual memory management. Migrate to C++ smart pointers (std::unique_ptr, std::shared_ptr) to automate memory lifecycles.

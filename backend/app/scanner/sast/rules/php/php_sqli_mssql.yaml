@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    pg_query, mysql_query, mssql_query verified from official php.net documentation.
+
+rule_id: php_sqli_mssql
+language: php
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via PHP mssql_query() with user-controlled SQL string for SQL
+  Server
+message: |-
+  User input is concatenated into a SQL Server query string passed to mssql_query(). SQL Server injection is particularly dangerous because it supports xp_cmdshell stored procedures that execute OS commands. An attacker can dump all database tables, call xp_cmdshell to run system commands, or read files via BULK INSERT FROM.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- mssql_query(
+sanitizers:
+- sqlsrv_prepare(
+- sqlsrv_execute(
+remediation: |-
+  Replace mssql_query() with the sqlsrv driver or PDO with proper parameterized queries.
+
+  UNSAFE:
+    mssql_query("SELECT * FROM users WHERE name = '" . $_POST["name"] . "'");
+
+  SAFE (sqlsrv):
+    $stmt = sqlsrv_prepare($conn, "SELECT * FROM users WHERE name = ?", array(&$_POST["name"]));
+    sqlsrv_execute($stmt);
+
+  Disable xp_cmdshell and use minimal-privilege DB accounts. See OWASP SQL Injection Prevention Cheat Sheet.

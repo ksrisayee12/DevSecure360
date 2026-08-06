@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based pattern detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Integer overflow before memory allocation verified from CodeQL C/C++ standard libraries. Rule is Tentative.
+
+rule_id: cpp_int_overflow_vector
+language: cpp
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-190
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Integer Overflow in std::vector::resize
+message: |-
+  The application calls std::vector::resize() using an unchecked integer derived from user input, potentially leading to excessive resource consumption (OOM) or integer wrap.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- vector.resize(
+sanitizers: []
+remediation: |-
+  Validate the requested size against application-defined limits before calling resize() to prevent resource exhaustion.

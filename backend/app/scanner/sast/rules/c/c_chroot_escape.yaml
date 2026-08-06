@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow+strcpy
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Unbounded string copy operations cause classic buffer overflows.
+
+rule_id: c_chroot_escape
+language: c
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-243
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: chroot() Escape via missing chdir()
+message: |-
+  The chroot() function changes the root directory but does not change the current working directory. If chdir("/") is not called immediately after chroot(), an attacker can use relative paths (../../) to escape the chroot jail.
+sources: []
+sinks:
+- chroot(
+sanitizers:
+- chdir(
+remediation: |-
+  Always call chdir("/") immediately after a successful chroot().
+
+  UNSAFE:
+    chroot("/var/jail");
+
+  SAFE:
+    if (chroot("/var/jail") == 0) {
+        chdir("/");
+    } Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

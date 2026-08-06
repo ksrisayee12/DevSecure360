@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    include(), move_uploaded_file() path traversal sinks from php.net and Semgrep registry.
+
+rule_id: php_path_include_user
+language: php
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Local File Inclusion via PHP include() or require() with user-controlled filename
+message: |-
+  User-supplied input directly controls the file path passed to include(), include_once(), require(), or require_once(). An attacker can supply path traversal sequences (../) to include arbitrary files from the server. With allow_url_include enabled, Remote File Inclusion (RFI) is also possible, allowing execution of attacker-controlled PHP code from a remote URL.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- include(
+- include_once(
+- require(
+- require_once(
+sanitizers:
+- basename(
+- realpath(
+remediation: |-
+  Never pass user input to include/require. Use a whitelist map of allowed templates.
+
+  UNSAFE:
+    include("templates/" . $_GET["page"] . ".php");
+
+  SAFE:
+    $allowed = ["home" => "home.php", "about" => "about.php"];
+    $page = $allowed[$_GET["page"]] ?? "home.php";
+    include("templates/" . $page);
+
+  Set allow_url_include = Off in php.ini to prevent RFI. See OWASP File Inclusion defense guide.

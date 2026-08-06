@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/415.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Calling free() twice on the same pointer corrupts heap management structures.
+
+rule_id: c_double_free
+language: c
+vuln_class: Memory Corruption
+severity: High
+cwe: CWE-415
+owasp: A04:2021-Insecure Design
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Double Free Vulnerability
+message: |-
+  Calling free() twice on the same memory address corrupts the memory allocator's internal data structures. This can lead to program crashes (DoS) or arbitrary code execution.
+sources: []
+sinks:
+- free(
+sanitizers:
+- ptr = NULL
+remediation: |-
+  Set the pointer to NULL immediately after the first free(). The C standard specifies that free(NULL) is a no-op, preventing double-free crashes. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/113.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=http+response+splitting
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    HTTP response splitting via unvalidated header values verified from CodeQL and Semgrep registry.
+
+rule_id: js_http_response_split
+language: javascript
+vuln_class: XSS
+severity: High
+cwe: CWE-113
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: HTTP Response Splitting via unvalidated user input in Express res.setHeader()
+  or res.set()
+message: |-
+  User-controlled data is written to an HTTP response header via res.setHeader() or res.set() without stripping carriage-return and line-feed characters. An attacker who can inject \r\n into a header value can split the response, inject arbitrary headers (Set-Cookie, Location), or create a second response body — enabling XSS, session fixation, or cache poisoning.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+sinks:
+- res.setHeader(
+- res.set(
+- res.header(
+sanitizers:
+- encodeURIComponent(
+- sanitizeHeader(
+remediation: |-
+  Remove or encode CR/LF characters from any user-controlled value before setting response headers.
+
+  UNSAFE:
+    res.setHeader('X-User-Name', req.query.name);  /* may contain \r\n */
+
+  SAFE:
+    const safeName = req.query.name.replace(/[\r\n]/g, '');
+    res.setHeader('X-User-Name', safeName);
+
+  Avoid reflecting user input in response headers. Modern Node.js throws on CR/LF in headers but older versions do not. See OWASP HTTP Response Splitting defense guide.

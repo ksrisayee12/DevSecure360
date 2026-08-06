@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input passed to HTTP client libraries allows Server-Side Request Forgery.
+
+rule_id: cpp_ssrf_cpprestsdk
+language: cpp
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via C++ REST SDK (Casablanca)
+message: |-
+  Passing an unvalidated user-provided URL to web::http::client::http_client allows SSRF. The application may make unauthorized requests to internal endpoints.
+sources: []
+sinks:
+- web::http::client::http_client(
+sanitizers:
+- validate_uri(
+remediation: |-
+  Parse the URL and ensure the host does not resolve to local, private, or loopback network addresses. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/367.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/csharp/semmle/code/csharp/security/dataflow/RaceCondition.qll
+# Semgrep Source:  https://semgrep.dev/r/csharp.lang.security.file.exists.race-condition
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    File.Exists() followed by File.Open() is a TOCTOU race condition.
+
+rule_id: csharp_race_condition
+language: csharp
+vuln_class: Race Condition
+severity: Medium
+cwe: CWE-367
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:H/A:N
+confidence: Tentative
+issue: Time-of-check Time-of-use (TOCTOU) Race Condition (CWE-367)
+message: |-
+  The application checks for the existence of a file before operating on it. An attacker can replace the file between the check and the use to access unauthorized data.
+sources:
+- File.Exists(
+sinks:
+- File.Open(
+- File.ReadAllText(
+- File.Delete(
+sanitizers: []
+remediation: |-
+  Do not check for file existence before opening it. Instead, attempt the operation and handle the resulting exceptions.
+
+  UNSAFE:
+    if (File.Exists(path)) { File.Open(path, FileMode.Open); }
+
+  SAFE:
+    try { File.Open(path, FileMode.Open); } catch (FileNotFoundException) { }

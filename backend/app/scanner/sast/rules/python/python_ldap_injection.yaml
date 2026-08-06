@@ -1,57 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/90.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=ldap+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html
+# Verification:    User input in LDAP queries without escaping enables auth bypass.
+
 rule_id: python_ldap_injection
 language: python
 vuln_class: LDAP Injection
-severity: High
+severity: Critical
 cwe: CWE-90
 owasp: A03:2021-Injection
-cvss_score: 7.5
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Confirmed
-issue: LDAP Injection via ldap module
+issue: LDAP Injection via unescaped string formatting in LDAP search filter
 message: |-
-  User input is used to dynamically construct LDAP search filters. An attacker can inject special characters to bypass authentication or extract unauthorized information from the directory.
+  Constructing an LDAP filter string dynamically with user input allows an attacker to alter the query logic, bypassing authentication or accessing unauthorized directory information.
 sources:
-- request.args.get(
-- request.args[
-- request.form.get(
-- request.form[
-- request.json
-- request.get_json(
+- request.args
+- request.form
 - request.data
-- request.values.get(
-- request.values[
-- request.cookies.get(
-- request.cookies[
-- request.headers.get(
-- request.headers[
-- request.files.get(
-- request.stream
-- request.GET.get(
-- request.GET[
-- request.POST.get(
-- request.POST[
-- request.body
-- request.META.get(
-- request.COOKIES.get(
-- request.FILES.get(
-- Query(
-- Body(
-- Form(
-- Path(
-- Header(
-- Cookie(
-- os.environ.get(
-- os.environ[
-- os.getenv(
-- sys.argv[
-- input(
+- request.json
+- request.GET
+- request.POST
 sinks:
-- ldap.search(
-- ldap3.Connection.search(
-- ldap.modify(
-- ldap.add(
-- ldap.delete(
-- ldap.search_s(
-- ldap.compare(
-sanitizers: []
-remediation: "Escape LDAP special characters (*, (, ), \\, \0) using a library function before including user input in LDAP queries.\n\nUNSAFE:\n  conn.search('dc=example,dc=com', f'(uid={username})')\n\nSAFE:\n  import ldap3.utils.conv\n  safe_username = ldap3.utils.conv.escape_filter_chars(username)\n  conn.search('dc=example,dc=com', f'(uid={safe_username})')"
+- ldap_conn.search_s(base, scope, f"(uid={
+- ldap_conn.search(
+sanitizers:
+- ldap3.utils.conv.escape_filter_chars(
+remediation: |-
+  Use the appropriate escaping function (e.g., ldap3.utils.conv.escape_filter_chars) on all user input embedded in LDAP filters. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

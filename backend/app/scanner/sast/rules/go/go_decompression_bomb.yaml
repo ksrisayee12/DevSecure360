@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   Not applicable — structural resource consumption detection
+# Semgrep Source:  https://semgrep.dev/r?q=decompression+bomb
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html
+# Verification:    Unlimited decompression / io.Copy without MaxBytesReader verified as DoS pattern. Rule is Tentative.
+
+rule_id: go_decompression_bomb
+language: go
+vuln_class: DoS
+severity: High
+cwe: CWE-400
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Denial of Service via unlimited decompression of attacker-controlled gzip/zlib
+  data (decompression bomb)
+message: |-
+  The application decompresses user-controlled gzip or zlib data using io.Copy without a size limit. An attacker can provide a 'zip bomb' — a small compressed file that expands to gigabytes of data. The unlimited io.Copy exhausts server memory, causing OOM kill, disk full, or process crash, leading to denial of service for all users.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+- r.MultipartForm
+sinks:
+- gzip.NewReader(
+- zlib.NewReader(
+- io.Copy(
+sanitizers:
+- io.LimitReader(
+- MaxBytes
+remediation: |-
+  Limit decompressed data size using io.LimitReader before piping to io.Copy.
+
+  UNSAFE:
+    gr, _ := gzip.NewReader(r.Body)
+    io.Copy(dst, gr)  /* no size limit — decompression bomb */
+
+  SAFE:
+    const maxBytes = 10 * 1024 * 1024  // 10 MB limit
+    gr, _ := gzip.NewReader(r.Body)
+    limited := io.LimitReader(gr, maxBytes+1)
+    n, _ := io.Copy(dst, limited)
+    if n > maxBytes { return errors.New("decompressed size exceeds limit") }
+
+  See OWASP Denial of Service Cheat Sheet and CWE-400 for resource exhaustion defense.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: php_unsafe_reflection_class
+language: php
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Reflection via ReflectionClass
+message: |-
+  Instantiating a new ReflectionClass or calling variable classes (e.g., new $className()) using unvalidated user input allows attackers to instantiate arbitrary objects and bypass logic.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_FILES[
+sinks:
+- new ReflectionClass(
+- new $class(
+sanitizers:
+- in_array(
+remediation: |-
+  Do not instantiate classes directly from user strings. Use an array map to link user input to safe, predefined class names. Always review your code and apply strict validation. Consult secure coding best practices.

@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   Not applicable — absence-based flag detection
+# Semgrep Source:  https://semgrep.dev/r?q=cookie+security
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Cookie security detection checks for absence of Secure/HttpOnly flags. Structural. Rule is Tentative.
+
+rule_id: php_cookie_security
+language: php
+vuln_class: Cookie Security
+severity: Low
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Insecure Cookie Configuration
+message: |-
+  A cookie is created without the Secure or HttpOnly flags, allowing it to be transmitted over unencrypted connections or accessed via client-side scripts.
+sources: []
+sinks:
+- setcookie(
+- setrawcookie(
+sanitizers:
+- true, true
+remediation: |-
+  Set the Secure and HttpOnly flags on all sensitive cookies.
+
+  UNSAFE:
+    setcookie('session', $token);
+
+  SAFE:
+    setcookie('session', $token, [ 'secure' => true, 'httponly' => true ]);

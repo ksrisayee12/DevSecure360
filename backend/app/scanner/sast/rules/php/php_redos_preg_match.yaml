@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    ReDoS detection is pattern-based on catastrophic backtracking regex literals. Rule is Tentative.
+
+rule_id: php_redos_preg_match
+language: php
+vuln_class: ReDoS
+severity: Medium
+cwe: CWE-1333
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Tentative
+issue: ReDoS via preg_match() and complex regex
+message: |-
+  Applying a complex regular expression with overlapping quantifiers against untrusted input using preg_match() can cause catastrophic backtracking and a Denial of Service.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- preg_match(
+sanitizers:
+- pcre.backtrack_limit
+remediation: |-
+  Avoid complex regex patterns with nested quantifiers. Enforce strict string length limits and ensure the pcre.backtrack_limit configuration in php.ini is kept reasonably low. Always ensure input validation and consult language-specific security documentation.

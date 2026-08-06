@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based query string detection
+# Semgrep Source:  https://semgrep.dev/r?q=graphql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html
+# Verification:    GraphQL query string concatenation sinks verified from OWASP GraphQL Cheat Sheet and Semgrep.
+
+rule_id: python_graphql_injection
+language: python
+vuln_class: Code Injection
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: GraphQL Injection via user-controlled string concatenated into GraphQL query
+  string
+message: |-
+  User-controlled input is directly concatenated into a GraphQL query string passed to a GraphQL client or graphql.graphql() executor. An attacker can inject additional GraphQL fields, fragments, or directives to access unauthorized types, bypass field-level authorization, enumerate the schema via introspection, or trigger denial of service via deeply nested queries.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.files
+sinks:
+- graphql(
+- client.execute(
+- f"query {
+- f"{ {
+sanitizers:
+- variables=
+- graphql_sync(schema, query, variable_values=
+remediation: |-
+  Use GraphQL variables for all user-supplied values — never string-concatenate user data into queries.
+
+  UNSAFE:
+    query = f'{{ user(id: "{user_id}") {{ name email }} }}'
+    result = graphql_sync(schema, query)
+
+  SAFE:
+    query = '{ user(id: $id) { name email } }'
+    result = graphql_sync(schema, query, variable_values={'id': user_id})
+
+  Variables are parsed and typed separately from the query document. See OWASP GraphQL Cheat Sheet and Graphene Python documentation.

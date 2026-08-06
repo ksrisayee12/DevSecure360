@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=dos
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    Recursive entity expansion or unbounded decompression rapidly exhausts memory and CPU.
+
+rule_id: csharp_dos_regex_matchtimeout
+language: csharp
+vuln_class: DoS
+severity: Medium
+cwe: CWE-400
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Confirmed
+issue: Denial of Service via unbounded Regex (Missing Timeout)
+message: |-
+  Executing Regex operations without specifying a match timeout on user input allows ReDoS attacks, which can freeze the thread and consume high CPU.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Regex.Match(
+- Regex.IsMatch(
+sanitizers:
+- TimeSpan.FromSeconds(
+remediation: |-
+  Always pass a `TimeSpan` timeout argument to Regex static methods or set the `AppDomain` default regex match timeout. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

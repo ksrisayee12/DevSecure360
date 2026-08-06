@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/208.html
+# CodeQL Source:   Not applicable — pattern-based comparison detection
+# Semgrep Source:  https://semgrep.dev/r?q=timing+attack
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-constant-time comparison for cryptographic secrets detected structurally. Rule is Tentative.
+
+rule_id: php_timing_attack
+language: php
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-208
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Timing attack via PHP == or === comparison of HMAC digests instead of hash_equals()
+message: |-
+  The PHP application compares HMAC digests, CSRF tokens, or password reset tokens using the == or === operator. PHP's string comparison short-circuits on the first differing character, leaking timing information. An attacker making repeated requests can statistically determine valid HMAC bytes byte-by-byte, forging webhook signatures or API authentication tokens.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- == $expectedMac
+- === $token
+- $digest == $
+sanitizers:
+- hash_equals(
+remediation: |-
+  Use hash_equals() for all HMAC, token, and cryptographic digest comparisons.
+
+  UNSAFE:
+    if ($computedMac == $providedMac) { /* timing leak */ }
+    if ($token === $_GET['token']) { /* timing leak */ }
+
+  SAFE:
+    if (hash_equals($computedMac, $providedMac)) { /* constant-time */ }
+
+  hash_equals() was introduced in PHP 5.6 and is always constant-time. See PHP docs for hash_equals() and OWASP Cryptographic Storage Cheat Sheet.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Unsafe deserialization (e.g., yaml.load without SafeLoader) allows arbitrary code execution.
+
+rule_id: python_deserialization_yaml
+language: python
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via yaml.load()
+message: |-
+  Using yaml.load() without specifying the SafeLoader on untrusted YAML allows an attacker to instantiate arbitrary Python objects and execute code.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- yaml.load(
+sanitizers:
+- yaml.safe_load(
+remediation: |-
+  Always use yaml.safe_load() instead of yaml.load() when parsing untrusted YAML data. Always ensure input validation and consult language-specific security documentation.

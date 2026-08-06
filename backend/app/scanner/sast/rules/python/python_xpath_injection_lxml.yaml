@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: python_xpath_injection_lxml
+language: python
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via lxml or xml.etree
+message: |-
+  Formatting user input directly into an XPath expression string passed to tree.xpath() or find() allows an attacker to alter the query logic and bypass access controls.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- tree.xpath(
+- root.find(
+sanitizers:
+- xpath_variables
+remediation: |-
+  Use parameterized XPath queries using dictionaries (e.g., in lxml) or strictly validate the user input before concatenation. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

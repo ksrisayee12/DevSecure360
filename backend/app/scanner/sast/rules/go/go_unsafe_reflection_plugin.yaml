@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: go_unsafe_reflection_plugin
+language: go
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Plugin Loading via plugin.Open()
+message: |-
+  Opening a Go plugin dynamically based on user-supplied file paths allows an attacker to load a malicious plugin and execute arbitrary init() functions.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- plugin.Open(
+sanitizers:
+- filepath.Base
+remediation: |-
+  Restrict plugin loading to a secure, hardcoded directory, and validate the requested plugin name against a strict allowlist. Always review your code and apply strict validation. Consult secure coding best practices.

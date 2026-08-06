@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserializing untrusted data without allowlists allows RCE.
+
+rule_id: java_object_input_stream
+language: java
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via ObjectInputStream.readObject()
+message: |-
+  Deserializing untrusted data with ObjectInputStream allows arbitrary code execution via gadget chains (e.g., Apache Commons Collections) present in the classpath.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new ObjectInputStream(
+- ois.readObject(
+sanitizers:
+- ValidatingObjectInputStream
+remediation: |-
+  Do not use Java serialization for untrusted data. Use JSON/XML. If unavoidable, use a ValidatingObjectInputStream with a strict allowlist of classes. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

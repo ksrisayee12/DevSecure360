@@ -1,40 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    User-controlled URLs passed to HTTP clients lead to SSRF, allowing internal network scanning.
+
 rule_id: csharp_ssrf_httpclient
 language: csharp
 vuln_class: SSRF
 severity: High
 cwe: CWE-918
-owasp: A10:2021-Server-Side Request Forgery
-cvss_score: 8.6
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
 confidence: Confirmed
-issue: Server-Side Request Forgery via HttpClient
+issue: Server-Side Request Forgery (SSRF) via HttpClient.GetAsync()
 message: |-
-  User input constructs a URL that the server requests. Attackers can scan internal networks or access internal services.
+  Passing user-controlled input to HttpClient.GetAsync() or SendAsync() enables SSRF attacks, allowing an attacker to access internal microservices or cloud metadata endpoints.
 sources:
-- Request.QueryString[
+- Request.Query[
 - Request.Form[
-- Request.Cookies[
 - Request.Headers[
-- Request.Params[
-- Request.Item[
-- HttpContext.Request.Query[
-- HttpContext.Request.Form[
-- Environment.GetEnvironmentVariable(
-- Environment.GetCommandLineArgs(
+- HttpContext.Request
 sinks:
-- new HttpClient(
-- HttpClient.GetAsync(
-- HttpClient.PostAsync(
-- HttpClient.SendAsync(
-- WebClient.DownloadString(
-- WebRequest.Create(
-sanitizers: []
+- HttpClient().GetAsync(
+- client.GetAsync(
+sanitizers:
+- Uri.IsWellFormedUriString(
 remediation: |-
-  Validate requested URLs against a strict allowlist. Do not allow users to specify arbitrary URLs to fetch.
-
-  UNSAFE:
-    var client = new HttpClient();
-    var response = await client.GetAsync(url);
-
-  SAFE:
-    // Validate url against an allowlist before making the request
+  Validate user-supplied URLs against an allowlist of approved domains. Ensure the parsed URI does not map to internal or loopback IP addresses. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

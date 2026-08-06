@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/915.html
+# CodeQL Source:   Not applicable — pattern-based ORM detection
+# Semgrep Source:  https://semgrep.dev/r?q=mass+assignment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
+# Verification:    Binding all request parameters to a model object allows updating unintended fields (e.g. isAdmin).
+
+rule_id: csharp_mass_assignment
+language: csharp
+vuln_class: Mass Assignment
+severity: High
+cwe: CWE-915
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Mass Assignment / Over-Posting via Model Binding
+message: |-
+  Binding an entire HTTP request directly to an entity model (e.g., User) allows attackers to overwrite sensitive fields like IsAdmin or Role that were not intended to be exposed in the form.
+sources:
+- '[FromBody] User user'
+sinks:
+- _context.Users.Update(user)
+sanitizers:
+- ViewModel
+- DTO
+remediation: |-
+  Do not use entity models directly in API inputs. Create specific DTOs (Data Transfer Objects) or ViewModels that only contain the fields intended for user updates. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/SqlInjection.qll
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    Hibernate, JdbcTemplate, JPA, MyBatis sinks verified from CodeQL Java standard libraries.
+
+rule_id: java_sqli_spring_jdbc
+language: java
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via Spring JdbcTemplate with concatenated SQL string argument
+message: |-
+  User-controlled data is concatenated into an SQL string passed to Spring JdbcTemplate methods such as query(), queryForObject(), or execute(). JdbcTemplate does not escape input when raw string arguments are used. An attacker can inject arbitrary SQL to read all tables, alter data, or escalate privileges within the database.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- jdbcTemplate.query(
+- jdbcTemplate.execute(
+- jdbcTemplate.update(
+- jdbcTemplate.queryForObject(
+sanitizers:
+- '?'
+- prepareStatement(
+remediation: |-
+  Use JdbcTemplate with positional ? placeholder parameters and an Object[] args array.
+
+  UNSAFE:
+    jdbcTemplate.query("SELECT * FROM users WHERE name = '" + name + "'", mapper);
+
+  SAFE:
+    jdbcTemplate.query("SELECT * FROM users WHERE name = ?", new Object[]{name}, mapper);
+
+  Never concatenate user input into SQL. See OWASP SQL Injection Prevention Cheat Sheet.

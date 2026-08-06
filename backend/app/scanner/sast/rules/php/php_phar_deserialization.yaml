@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   Not applicable — pattern-based PHAR/deserial sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=phar+deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    PHAR deserialization via file_exists/is_file with phar:// stream wrapper verified from BlackHat research.
+
+rule_id: php_phar_deserialization
+language: php
+vuln_class: Deserialization
+severity: High
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: PHAR Deserialization via PHP file operations on attacker-controlled path with
+  phar:// stream wrapper
+message: |-
+  PHP's phar:// stream wrapper automatically deserializes PHAR metadata when any file operation (file_exists, is_file, fopen, file_get_contents) is performed on a phar:// URI. If user input controls a file path that is passed to these functions without blocking the phar:// scheme, an attacker can trigger arbitrary object deserialization by uploading a malicious PHAR file and accessing it via phar://<uploaded_file>
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- file_exists($_
+- is_file($_
+- fopen($_
+- file_get_contents($_
+- require($_
+sanitizers:
+- str_starts_with($path, 'phar://')
+- stream_wrapper_unregister('phar')
+remediation: |-
+  Block the phar:// stream wrapper or validate paths do not contain phar:// scheme.
+
+  UNSAFE:
+    if (file_exists($_GET['path'])) { ... }  /* phar:// triggers deserialization */
+
+  SAFE:
+    $path = $_GET['path'];
+    if (preg_match('/^phar:\/\//i', $path)) die('Disallowed scheme');
+    if (file_exists($path)) { ... }
+
+  Or unregister the phar stream wrapper entirely:
+    stream_wrapper_unregister('phar');
+
+  See Sam Thomas's PHPG research and OWASP Deserialization Cheat Sheet for PHAR defense.

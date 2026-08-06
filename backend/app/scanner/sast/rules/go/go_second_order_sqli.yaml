@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=second+order+sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    Second-order SQLi via stored data re-used in raw query verified from CodeQL and OWASP testing guides.
+
+rule_id: go_second_order_sqli
+language: go
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'Second-Order SQL Injection: stored database value used in raw SQL string concatenation'
+message: |-
+  Data previously stored in the database (from user input) is retrieved via rows.Scan() and concatenated directly into a new SQL query string without parameterization. The stored value may have bypassed first-order injection defenses. An attacker who previously stored a payload like ' OR '1'='1 can trigger SQL injection when the value is re-queried.
+sources:
+- rows.Scan(
+- row.Scan(
+- result.String(
+sinks:
+- db.Query("SELECT.*+
+- db.Exec("UPDATE.*+
+- db.QueryRow("INSERT.*+
+sanitizers:
+- db.Query(sql, param
+- db.Exec(sql, param
+remediation: |-
+  Parameterize ALL SQL queries, including those using values from the database.
+
+  UNSAFE:
+    rows.Scan(&username)
+    db.Query("SELECT * FROM orders WHERE owner = '" + username + "'")
+
+  SAFE:
+    rows.Scan(&username)
+    db.Query("SELECT * FROM orders WHERE owner = $1", username)
+
+  Every data value is potentially untrusted regardless of its source. Treat DB-sourced data with the same caution as user input. See OWASP SQL Injection Cheat Sheet.

@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Using user input as a format string in printf-like functions allows memory read/write.
+
+rule_id: c_format_string_syslog
+language: c
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Format String Vulnerability in syslog()
+message: |-
+  Passing untrusted input directly as the format argument to syslog() enables format string attacks which can overwrite memory and lead to RCE.
+sources: []
+sinks:
+- syslog(LOG_INFO, userInput)
+- syslog(LOG_ERR, userInput)
+sanitizers:
+- '%s'
+remediation: |-
+  Always provide a static format string like "%s" when logging user input with syslog(). Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

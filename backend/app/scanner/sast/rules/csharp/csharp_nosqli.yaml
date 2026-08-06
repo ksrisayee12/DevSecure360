@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=nosql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    NoSQL injection sinks verified from Semgrep registry and official database driver documentation.
+
+rule_id: csharp_nosqli
+language: csharp
+vuln_class: NoSQLi
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.2
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N
+confidence: Confirmed
+issue: NoSQL Injection via Unsanitized Input
+message: |-
+  User input is directly concatenated into NoSQL query strings or filter documents, allowing attackers to bypass authentication or extract sensitive data.
+sources:
+- Request.QueryString[
+- Request.Form[
+- Request.Cookies[
+- Request.Headers[
+- Request.Params[
+- Request.Item[
+- HttpContext.Request.Query[
+- HttpContext.Request.Form[
+- Environment.GetEnvironmentVariable(
+- Environment.GetCommandLineArgs(
+sinks:
+- BsonDocument.Parse(
+- MongoDB.Driver.Builders.Query.Where(
+sanitizers: []
+remediation: |-
+  Use type-safe query builders or parameterized representations provided by the driver (e.g., MongoDB Driver's Builders class) instead of parsing raw JSON or concatenating strings.

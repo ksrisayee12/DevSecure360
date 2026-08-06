@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/113.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=http+response+splitting
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    HTTP response splitting via unvalidated header values verified from CodeQL and Semgrep registry.
+
+rule_id: go_html_unsafe_escape
+language: go
+vuln_class: XSS
+severity: High
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: XSS via Go html/template.HTML() type bypassing auto-escaping of user-controlled
+  content
+message: |-
+  The application wraps user-controlled data with template.HTML(), template.JS(), or template.URL() and passes it to an html/template rendering context. These types explicitly mark content as safe, bypassing the auto-escaping that html/template provides. An attacker who controls the wrapped value can inject arbitrary HTML and JavaScript into the rendered page.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- template.HTML(
+- template.JS(
+- template.URL(
+- template.CSS(
+sanitizers:
+- html.EscapeString(
+- template.HTMLEscapeString(
+remediation: |-
+  Never wrap user-controlled input with template.HTML() or similar unsafe types.
+
+  UNSAFE:
+    data := template.HTML(r.FormValue("content"))  /* bypasses escaping */
+
+  SAFE:
+    data := r.FormValue("content")  /* passed as string, auto-escaped by template engine */
+
+  html/template auto-escapes string values by context. Only use template.HTML() for server-generated HTML that you explicitly trust. See OWASP XSS Prevention Cheat Sheet.

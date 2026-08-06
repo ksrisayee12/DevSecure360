@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/semmle/javascript/security/dataflow/XPathInjection.qll
+# Semgrep Source:  https://semgrep.dev/r/javascript.lang.security.audit.xpath-injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    xpath.evaluate and xpath.select with concatenated strings are vulnerable to XPath Injection.
+
+rule_id: js_xpath_injection
+language: javascript
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: XPath Injection
+message: |-
+  User input is used to construct an XPath query without sanitization. Attackers can modify the query logic to extract unauthorized data.
+sources:
+- req.query.
+- req.query[
+- req.body.
+- req.body[
+- req.params.
+- req.params[
+- req.headers[
+- req.cookies.
+- req.cookies[
+- req.get(
+- request.query.
+- request.body.
+- request.params.
+- request.headers[
+- process.env.
+- process.argv[
+- readline.question(
+sinks:
+- xpath.evaluate(
+- xpath.select(
+- xpath.select1(
+sanitizers: []
+remediation: |-
+  Sanitize user input before using it in XPath queries, or prefer libraries that support parameterized querying.
+
+  UNSAFE:
+    xpath.select("//user[name='" + req.query.name + "']", doc);
+
+  SAFE:
+    // Validate input or safely escape user strings.

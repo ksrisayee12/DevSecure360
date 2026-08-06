@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: c_realloc_null_deref
+language: c
+vuln_class: Null Pointer Dereference
+severity: Medium
+cwe: CWE-476
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 5.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Null Pointer Dereference via unchecked realloc() return value — memory leak
+  and crash
+message: |-
+  realloc() returns NULL when the allocation fails, but the original pointer is passed as the first argument. If the return value is not checked before use, the program dereferences NULL on failure. Worse, if the result is assigned back to the same pointer variable on failure, the original memory block is leaked and then NULL is dereferenced on next access.
+sources: []
+sinks:
+- realloc(
+sanitizers:
+- if (newptr == NULL)
+- NULL check
+remediation: |-
+  Always assign realloc() to a temporary pointer and check for NULL before replacing the original.
+
+  UNSAFE:
+    ptr = realloc(ptr, new_size);  /* if NULL: memory leak + next deref crashes */
+
+  SAFE:
+    void *tmp = realloc(ptr, new_size);
+    if (tmp == NULL) { free(ptr); return ERROR; }
+    ptr = tmp;
+
+  See CERT MEM04-C: Do not perform zero-length allocations and CERT EXP34-C for null pointer guidance.

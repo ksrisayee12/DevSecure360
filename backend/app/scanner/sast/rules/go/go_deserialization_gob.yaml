@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserializing untrusted data without allowlists allows RCE.
+
+rule_id: go_deserialization_gob
+language: go
+vuln_class: Deserialization
+severity: High
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Insecure Deserialization via encoding/gob
+message: |-
+  Deserializing untrusted data with encoding/gob can be dangerous if the underlying types perform actions during initialization or method calls. While Go is generally safer than languages like Java or Python for deserialization, it can still lead to logic bugs or resource exhaustion.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- gob.NewDecoder(
+sanitizers:
+- validate(
+remediation: |-
+  Avoid deserializing untrusted data with gob. Use structured formats like JSON and validate the decoded structs. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

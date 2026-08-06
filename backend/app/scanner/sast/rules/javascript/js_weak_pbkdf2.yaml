@@ -1,0 +1,41 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/916.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=pbkdf2+weak+iterations
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+# Verification:    NIST SP 800-132 recommends >=310,000 PBKDF2-SHA256 iterations as of 2023.
+
+rule_id: js_weak_pbkdf2
+language: javascript
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-916
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak password hashing via crypto.pbkdf2() with iteration count below NIST SP
+  800-132 minimum
+message: |-
+  The Node.js application uses crypto.pbkdf2() or crypto.pbkdf2Sync() with an iteration count well below the NIST SP 800-132 (2023) recommendation of 310,000 for PBKDF2-SHA256. An attacker with access to the password database can use GPU-accelerated tools (Hashcat) to crack low-iteration PBKDF2 hashes at millions of attempts per second.
+sources: []
+sinks:
+- crypto.pbkdf2(password
+- crypto.pbkdf2Sync(password
+sanitizers:
+- bcrypt.hash(
+- argon2.hash(
+remediation: |-
+  Use bcrypt or Argon2id for password hashing. If PBKDF2 is required, use >= 310,000 iterations.
+
+  UNSAFE:
+    crypto.pbkdf2(password, salt, 1000, 64, 'sha256', (err, key) => { ... })
+
+  SAFE (PBKDF2):
+    crypto.pbkdf2(password, salt, 310000, 64, 'sha256', (err, key) => { ... })
+
+  BETTER (bcrypt):
+    const bcrypt = require('bcrypt');
+    const hash = await bcrypt.hash(password, 12);
+
+  See NIST SP 800-132, OWASP Password Storage Cheat Sheet, and Node.js crypto documentation.

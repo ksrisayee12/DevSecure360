@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Exposing stack traces or verbose debug messages to users facilitates reconnaissance. Rule is Tentative.
+
+rule_id: python_info_exposure_traceback
+language: python
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure via traceback.format_exc() returned in HTTP response
+message: |-
+  Returning the output of traceback.format_exc() in Flask or Django error handlers leaks the application's source code paths and logic flow to an attacker.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- traceback.format_exc()
+sanitizers:
+- logger.error
+remediation: |-
+  Log the traceback securely on the server-side, and return a sanitized, generic error message to the HTTP client. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

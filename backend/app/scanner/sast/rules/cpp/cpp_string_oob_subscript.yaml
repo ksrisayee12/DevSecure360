@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=string+subscript+bounds
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    std::string operator[] without bounds vs .at() verified from CodeQL C++ standard library analysis.
+
+rule_id: cpp_string_oob_subscript
+language: cpp
+vuln_class: Out-of-bounds Read
+severity: High
+cwe: CWE-125
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Out-of-bounds Read via std::string operator[] with unchecked index (no exception
+  thrown)
+message: |-
+  std::string::operator[] does not perform bounds checking — accessing an index >= size() is undefined behavior that silently reads adjacent memory. This differs from std::string::at() which throws std::out_of_range. Reading adjacent stack/heap memory via an out-of-range index can leak cryptographic material, passwords, or memory addresses.
+sources: []
+sinks:
+- str[user_idx]
+- s[i]
+- name[index]
+sanitizers:
+- str.at(
+- s.at(
+remediation: |-
+  Use std::string::at() for bounds-checked access, or validate the index before using operator[].
+
+  UNSAFE:
+    char c = str[user_index];  /* UB if user_index >= str.size() */
+
+  SAFE (exception on invalid index):
+    char c = str.at(user_index);  /* throws std::out_of_range */
+
+  SAFE (manual bounds check):
+    if (user_index >= str.size()) return ERROR;
+    char c = str[user_index];
+
+  Prefer std::string_view::at() for read-only access. Enable -D_GLIBCXX_DEBUG for runtime checks.

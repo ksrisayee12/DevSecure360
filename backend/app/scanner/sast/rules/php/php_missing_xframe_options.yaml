@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: php_missing_xframe_options
+language: php
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Frame-Options header in PHP response allows clickjacking
+message: |-
+  The PHP application does not set the X-Frame-Options response header, permitting the application to be embedded in an iframe by any external website. Clickjacking attacks can exploit this by overlaying an invisible frame on top of a trusted-looking page to trick authenticated users into clicking hidden buttons that perform unintended privileged operations.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Send the X-Frame-Options header in all PHP responses.
+
+  UNSAFE: No X-Frame-Options header.
+  SAFE:
+    header("X-Frame-Options: DENY");
+    // Or for same-origin framing:
+    header("X-Frame-Options: SAMEORIGIN");
+
+  Add to a front controller or bootstrap file applied to every request. The Content-Security-Policy frame-ancestors directive is the modern equivalent with more control.

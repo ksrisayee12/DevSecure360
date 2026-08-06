@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/338.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+random
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    rand()/srand() and std::rand() verified as cryptographically insecure from NIST and CodeQL.
+
+rule_id: cpp_weak_rand_crypto
+language: cpp
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-338
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak randomness via std::rand() or std::srand() used for security-sensitive
+  token generation
+message: |-
+  The application uses std::rand() seeded with std::srand(time(nullptr)) to generate session tokens, cryptographic keys, or CSRF nonces. std::rand() is not cryptographically secure and its output is predictable by observing a small number of values. The time-based seed provides only second-level entropy, making it trivially brute-forceable.
+sources: []
+sinks:
+- std::rand()
+- rand()
+- srand(time(
+sanitizers:
+- std::random_device
+- RAND_bytes(
+remediation: |-
+  Use std::random_device for cryptographically secure random values in C++.
+
+  UNSAFE:
+    std::srand(time(nullptr));
+    int token = std::rand();
+
+  SAFE:
+    #include <random>
+    std::random_device rd;
+    std::array<uint8_t, 32> token;
+    std::generate(token.begin(), token.end(), std::ref(rd));
+
+  For production, prefer OS APIs (getrandom, BCryptGenRandom) or OpenSSL RAND_bytes(). See CERT MSC50-CPP and OWASP Cryptographic Storage Cheat Sheet.

@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/16.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html
+# Verification:    Misconfiguration detection is structural, checking for presence of insecure settings. Rule is Tentative.
+
+rule_id: js_misconfig_cors_wildcard
+language: javascript
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Dangerous CORS Wildcard Configuration
+message: |-
+  The CORS configuration combines origin: '*' with credentials: true. This allows any malicious website to read authenticated cross-origin responses.
+sources: []
+sinks:
+- 'cors({origin: "*"'
+- 'cors({origin: ''*'''
+sanitizers: []
+remediation: |-
+  Do not use wildcard origins with credentials. Explicitly specify the exact trusted origins in the CORS configuration allowlist.

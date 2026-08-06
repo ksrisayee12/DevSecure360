@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/338.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+random
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    rand()/srand() and std::rand() verified as cryptographically insecure from NIST and CodeQL.
+
+rule_id: csharp_aes_iv_static
+language: csharp
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-330
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.4
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: 'Weak Crypto: static or hardcoded AES IV — same plaintext always produces same
+  ciphertext'
+message: |-
+  The application sets a static or hardcoded initialization vector (IV) for AES encryption using aes.IV = fixedBytes or new byte[16]. A static IV with the same key means identical plaintexts always produce identical ciphertexts. This enables pattern analysis, replay attacks, and in CBC mode enables padding oracle attacks when combined with error oracles.
+sources: []
+sinks:
+- aes.IV = new byte
+- aes.IV = Convert.FromBase64String
+- RijndaelManaged().IV
+sanitizers:
+- GenerateIV()
+- RandomNumberGenerator
+remediation: |-
+  Generate a fresh random IV for every encryption operation and prepend it to the ciphertext.
+
+  UNSAFE:
+    aes.IV = new byte[16];  /* all-zero IV — static */
+    aes.IV = Convert.FromBase64String("AAAAAAAAAAAAAAAA==");
+
+  SAFE:
+    aes.GenerateIV();  /* random IV per operation */
+    // Prepend IV to ciphertext: byte[] result = aes.IV.Concat(encrypted).ToArray();
+
+  Prefer AES-GCM (AesGcm class in .NET 5+) which handles IV requirements automatically. See OWASP Cryptographic Storage Cheat Sheet.

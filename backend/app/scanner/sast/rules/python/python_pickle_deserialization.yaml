@@ -1,0 +1,39 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserializing untrusted data without allowlists allows RCE.
+
+rule_id: python_pickle_deserialization
+language: python
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via pickle.loads() with untrusted data
+message: |-
+  The pickle module is not secure. Unpickling untrusted data allows arbitrary Python code execution because pickled objects can define a __reduce__ method that executes commands.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- pickle.loads(
+- pickle.load(
+sanitizers:
+- json.loads(
+remediation: |-
+  Never use pickle for untrusted data. Use JSON or another safe, text-based serialization format.
+
+  UNSAFE:
+    data = pickle.loads(request.data)
+
+  SAFE:
+    data = json.loads(request.data) Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=dos
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    Recursive entity expansion or unbounded decompression rapidly exhausts memory and CPU.
+
+rule_id: python_dos_zip_bomb
+language: python
+vuln_class: DoS
+severity: High
+cwe: CWE-400
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Confirmed
+issue: Denial of Service via ZipFile extraction
+message: |-
+  Extracting zip files using ZipFile.extractall() without validating the uncompressed sizes enables Zip Bomb attacks that exhaust disk space and memory.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- zip_ref.extractall(
+sanitizers:
+- zip_ref.getinfo().file_size
+remediation: |-
+  Iterate over the files inside the archive and sum the `file_size` properties. Abort extraction if the total size exceeds a safe maximum limit. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

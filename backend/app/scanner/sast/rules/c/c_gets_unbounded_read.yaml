@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow+strcpy
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Unbounded string copy operations cause classic buffer overflows.
+
+rule_id: c_gets_unbounded_read
+language: c
+vuln_class: Buffer Overflow
+severity: Critical
+cwe: CWE-242
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Buffer Overflow via deprecated gets() function
+message: |-
+  The gets() function reads from standard input until a newline without checking buffer boundaries. It is inherently unsafe and was removed from the C11 standard because it guarantees a buffer overflow if the input is longer than the buffer.
+sources: []
+sinks:
+- gets(
+sanitizers:
+- fgets(
+remediation: |-
+  Never use gets(). Use fgets() instead which takes the buffer size as an argument.
+
+  UNSAFE:
+    gets(buf);
+
+  SAFE:
+    fgets(buf, sizeof(buf), stdin); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

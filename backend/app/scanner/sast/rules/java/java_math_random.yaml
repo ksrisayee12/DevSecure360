@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/330.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+randomness
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-cryptographic PRNGs used for security tokens are predictable.
+
+rule_id: java_math_random
+language: java
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-330
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Insecure Randomness via java.util.Random or Math.random()
+message: |-
+  java.util.Random and Math.random() use a predictable Linear Congruential Generator. Do not use them for passwords, session IDs, or cryptographic keys.
+sources: []
+sinks:
+- new java.util.Random()
+- Math.random()
+sanitizers:
+- new java.security.SecureRandom()
+remediation: |-
+  Use java.security.SecureRandom for all security-sensitive random number generation. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

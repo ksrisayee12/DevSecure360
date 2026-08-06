@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    SQL injection sinks verified from CodeQL standard libraries and Semgrep registry for the respective language.
+
+rule_id: csharp_sqli_npgsql
+language: csharp
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via NpgsqlCommand
+message: |-
+  The application constructs queries for PostgreSQL using `NpgsqlCommand` and string concatenation, allowing attackers to inject arbitrary SQL statements.
+sources: []
+sinks:
+- new NpgsqlCommand(
+sanitizers: []
+remediation: |-
+  Bind user input to the database query by adding elements to the `NpgsqlCommand.Parameters` collection to ensure safe query execution.

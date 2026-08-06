@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Buffer overflow sinks (strcpy, strcat, gets, memcpy without size check) verified from CodeQL C/C++ standard libraries.
+
+rule_id: c_bof_sprintf
+language: c
+vuln_class: Buffer Overflow
+severity: Critical
+cwe: CWE-120
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Buffer Overflow via sprintf
+message: |-
+  The sprintf() function is used to format strings into a fixed-size buffer without bounds checking, potentially overwriting adjacent memory.
+sources:
+- argv
+- getenv
+- read
+- recv
+- recvfrom
+- fread
+- fgets
+- scanf
+- fscanf
+- sscanf
+- gets
+sinks:
+- sprintf(
+sanitizers: []
+remediation: |-
+  Always use snprintf() instead of sprintf() to specify the maximum size of the destination buffer and prevent overflows.

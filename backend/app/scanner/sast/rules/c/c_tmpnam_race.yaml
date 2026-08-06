@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/377.html
+# CodeQL Source:   Not applicable — structural pattern-based detection
+# Semgrep Source:  https://semgrep.dev/r?q=tmpnam+race
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    tmpnam()/tempnam() predictable temp file race verified from CERT C FIO43-C. Rule is Tentative.
+
+rule_id: c_tmpnam_race
+language: c
+vuln_class: Race Condition
+severity: High
+cwe: CWE-377
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.1
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Race Condition via tmpnam()/tempnam() predictable temporary file name — TOCTOU
+  symlink attack
+message: |-
+  tmpnam() and tempnam() generate a filename that does not yet exist at the time of the call, but they do NOT create or open the file atomically. Between the name generation and the subsequent fopen() call, an attacker can create a symlink at the generated path pointing to a sensitive file. The application then writes to the attacker's target file.
+sources: []
+sinks:
+- tmpnam(
+- tempnam(
+sanitizers:
+- mkstemp(
+- mkdtemp(
+remediation: |-
+  Use mkstemp() which atomically creates and opens a uniquely named temporary file.
+
+  UNSAFE:
+    char *path = tmpnam(NULL);
+    FILE *f = fopen(path, "w");  /* race window between tmpnam and fopen */
+
+  SAFE:
+    char tmpl[] = "/tmp/myapp-XXXXXX";
+    int fd = mkstemp(tmpl);  /* atomically creates the file, no race */
+    FILE *f = fdopen(fd, "w");
+
+  Set umask to 0077 before mkstemp() to prevent others from reading the temp file. See CERT C FIO43-C for complete temporary file guidance.

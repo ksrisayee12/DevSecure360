@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   Not applicable — pattern-based log sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=log+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+# Verification:    Unsanitized CRLF characters in logs allow spoofing log entries (Log Forging).
+
+rule_id: js_log_injection_console
+language: javascript
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A09:2021-Security Logging and Monitoring Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Injection via console.log() or winston
+message: |-
+  Passing unvalidated user input directly to console.log() allows an attacker to inject carriage returns and spoof log entries or exploit terminal emulators.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- console.log(
+- console.error(
+sanitizers:
+- input.replace(
+remediation: |-
+  Sanitize user input by removing newline characters before logging, or use a structured logging library that handles escaping properly. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: java_missing_xframe_options
+language: java
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Frame-Options header in Spring Security configuration allows clickjacking
+message: |-
+  The Spring application does not explicitly configure X-Frame-Options in Spring Security, or has disabled frame options. Without this protection, the application can be embedded in an iframe on any external domain. Attackers use this to perform clickjacking attacks, tricking authenticated users into performing unintended privileged operations through invisible overlay iframes.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Set frame options to DENY in Spring Security configuration.
+
+  UNSAFE: frameOptions disabled or not explicitly configured.
+  SAFE:
+    http.headers(headers -> headers
+        .frameOptions(frame -> frame.deny())
+    );
+
+  Spring Security enables SAMEORIGIN by default in older versions; explicitly set DENY unless your application requires framing from the same origin.

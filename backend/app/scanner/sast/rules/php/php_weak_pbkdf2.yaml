@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/916.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=pbkdf2+weak+iterations
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+# Verification:    NIST SP 800-132 recommends >=310,000 PBKDF2-SHA256 iterations as of 2023.
+
+rule_id: php_weak_pbkdf2
+language: php
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-916
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak password hashing via PHP hash_pbkdf2() with iteration count below NIST
+  SP 800-132 minimum
+message: |-
+  The application calls hash_pbkdf2() with an iteration count far below NIST SP 800-132's 2023 recommendation of 310,000 for PBKDF2-SHA256. PHP's hash_pbkdf2() with 1,000 iterations allows GPU cracking tools to test billions of passwords per second, cracking common passwords from a breached database in seconds.
+sources: []
+sinks:
+- hash_pbkdf2(
+- hash_pbkdf2('sha256'
+sanitizers:
+- password_hash(PASSWORD_BCRYPT
+- password_hash(PASSWORD_ARGON2ID
+remediation: |-
+  Use password_hash() with PASSWORD_BCRYPT or PASSWORD_ARGON2ID instead of hash_pbkdf2().
+
+  UNSAFE:
+    $hash = hash_pbkdf2('sha256', $password, $salt, 1000);
+
+  SAFE (PBKDF2 at minimum iterations):
+    $hash = hash_pbkdf2('sha256', $password, $salt, 310000);
+
+  BEST (password_hash — recommended for PHP):
+    $hash = password_hash($password, PASSWORD_ARGON2ID);
+    // Verify with:
+    password_verify($password, $hash);
+
+  See NIST SP 800-132, PHP password_hash() documentation, and OWASP Password Storage Cheat Sheet.

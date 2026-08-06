@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/611.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xxe
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    XML parsers processing untrusted data without disabling DTDs allow XXE attacks.
+
+rule_id: php_xxe_simplexml
+language: php
+vuln_class: XXE
+severity: High
+cwe: CWE-611
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XXE via simplexml_load_string() or DOMDocument
+message: |-
+  Parsing untrusted XML data with simplexml_load_string() or DOMDocument::loadXML() while libxml_disable_entity_loader(true) is not set (in PHP < 8) allows XXE attacks.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- simplexml_load_string(
+- loadXML(
+sanitizers:
+- libxml_disable_entity_loader(true)
+remediation: |-
+  For PHP < 8.0, call libxml_disable_entity_loader(true) before parsing XML. For PHP 8+, external entities are disabled by default. Always ensure input validation and consult language-specific security documentation.

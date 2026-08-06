@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/98.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/php/semmle/php/security/dataflow/LocalUrlInclusion.qll
+# Semgrep Source:  https://semgrep.dev/r/php.lang.security.file-inclusion
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    include/require with user input causes LFI in PHP.
+
+rule_id: php_lfi
+language: php
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-98
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Local File Inclusion (LFI)
+message: |-
+  User input controls the path in include/require statements. Attackers can include arbitrary local files or execute arbitrary code if they can upload a file or manipulate logs.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_FILES[
+- $_SERVER[
+- $HTTP_GET_VARS[
+- $HTTP_POST_VARS[
+- $HTTP_COOKIE_VARS[
+- $HTTP_RAW_POST_DATA
+- file_get_contents('php://input')
+sinks:
+- include(
+- include_once(
+- require(
+- require_once(
+sanitizers:
+- basename(
+- realpath(
+remediation: |-
+  Avoid using user input for file inclusions. If unavoidable, validate against a strict allowlist of permitted files.
+
+  UNSAFE:
+    include($_GET['page'] . '.php');
+
+  SAFE:
+    $pages = ['home', 'about'];
+    if (in_array($_GET['page'], $pages)) { include($_GET['page'] . '.php'); }

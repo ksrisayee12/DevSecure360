@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# Verification:    MongoTemplate.find with concatenated strings allows operator injection.
+
+rule_id: java_nosqli
+language: java
+vuln_class: NoSQLi
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.2
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N
+confidence: Confirmed
+issue: NoSQL Injection via Spring Data MongoDB
+message: |-
+  User input is used to dynamically construct NoSQL queries. An attacker can inject query operators to alter the query logic or extract data.
+sources:
+- request.getParameter(
+- request.getParameterValues(
+- request.getHeader(
+- request.getHeaders(
+- request.getCookies(
+- request.getInputStream(
+- request.getReader(
+- request.getQueryString(
+- request.getPathInfo(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+- '@RequestHeader'
+- '@CookieValue'
+sinks:
+- MongoTemplate.find(
+- mongoOps.findOne(
+sanitizers: []
+remediation: |-
+  Use parameterized queries or explicit object mapping instead of raw JSON queries.
+
+  UNSAFE:
+    mongoTemplate.find(new BasicQuery("{'user': '" + input + "'}"), User.class);
+
+  SAFE:
+    mongoTemplate.find(Query.query(Criteria.where("user").is(input)), User.class);

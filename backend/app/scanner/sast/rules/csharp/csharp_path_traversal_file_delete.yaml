@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Directory traversal in file delete/upload functions allows destructive actions or RCE.
+
+rule_id: csharp_path_traversal_file_delete
+language: csharp
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Confirmed
+issue: Arbitrary File Deletion via File.Delete()
+message: |-
+  Passing an unvalidated user string to File.Delete() permits directory traversal (../), enabling an attacker to delete sensitive configuration or application files.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- File.Delete(
+sanitizers:
+- Path.GetFileName(
+remediation: |-
+  Use Path.GetFileName() to sanitize the user input, ensuring only the intended file within a specific sandboxed directory is targeted. Always ensure input validation and consult language-specific security documentation.

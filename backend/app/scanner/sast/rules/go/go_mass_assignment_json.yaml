@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/915.html
+# CodeQL Source:   Not applicable — structural binding detection
+# Semgrep Source:  https://semgrep.dev/r?q=mass+assignment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
+# Verification:    Mass assignment via json.Unmarshal, model binding without allowlist. Rule is Tentative.
+
+rule_id: go_mass_assignment_json
+language: go
+vuln_class: Mass Assignment
+severity: High
+cwe: CWE-915
+owasp: A04:2021-Insecure Design
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N
+confidence: Tentative
+issue: Mass Assignment via json.Unmarshal binding all JSON fields to struct including
+  privileged fields
+message: |-
+  The Go handler deserializes HTTP request JSON directly into a domain model struct using json.Unmarshal without restricting which fields may be set by the caller. An attacker can include unexpected JSON keys that map to privileged struct fields (e.g., IsAdmin, Role, Balance), overwriting security-sensitive attributes and escalating privileges.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+- r.MultipartForm
+sinks:
+- json.Unmarshal(
+- json.NewDecoder(r.Body).Decode(
+sanitizers:
+- ReadOnlyFields
+- json:"-"
+remediation: |-
+  Use a separate DTO struct for incoming data with only user-settable fields exposed.
+
+  UNSAFE:
+    var user User  // contains IsAdmin bool
+    json.NewDecoder(r.Body).Decode(&user)  /* attacker sets IsAdmin: true */
+
+  SAFE:
+    type UserInput struct {
+        Name  string `json:"name"`
+        Email string `json:"email"`
+        // IsAdmin NOT included — cannot be set by user
+    }
+    var input UserInput
+    json.NewDecoder(r.Body).Decode(&input)
+
+  Use json:"-" to exclude privileged fields. See OWASP Mass Assignment Cheat Sheet.

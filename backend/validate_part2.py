@@ -16,7 +16,8 @@ ALLOWED_VULN_CLASSES = {
     "Integer Overflow", "Format String", "Use After Free", "Memory Corruption",
     "Race Condition", "Null Pointer Dereference", "ReDoS", "CSRF",
     "Misconfiguration", "Cookie Security", "Mass Assignment",
-    "File Upload", "Out-of-bounds Read"
+    "File Upload", "Out-of-bounds Read", "Information Exposure",
+    "Type Confusion", "DoS", "Cleartext Transmission", "Log Forging"
 }
 
 FORBIDDEN_SINKS = [

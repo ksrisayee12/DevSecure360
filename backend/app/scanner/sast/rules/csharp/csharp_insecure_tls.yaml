@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/295.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/csharp/semmle/code/csharp/security/dataflow/InsecureTls.qll
+# Semgrep Source:  https://semgrep.dev/r/csharp.lang.security.insecure-tls-validation
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    Returning true unconditionally in ServerCertificateValidationCallback disables all certificate checks.
+
+rule_id: csharp_insecure_tls
+language: csharp
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-295
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Insecure TLS Certificate Validation
+message: |-
+  The application disables TLS certificate validation by returning true in ServerCertificateValidationCallback. This allows Man-in-the-Middle (MitM) attacks.
+sources: []
+sinks:
+- ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+- ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true
+- ServerCertificateValidationCallback = delegate { return true; }
+sanitizers: []
+remediation: |-
+  Do not bypass certificate validation. If testing against self-signed certificates, use proper trust stores rather than ignoring validation in code.
+
+  UNSAFE:
+    ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
+  SAFE:
+    // Leave the default validation in place or implement strict pinned checks

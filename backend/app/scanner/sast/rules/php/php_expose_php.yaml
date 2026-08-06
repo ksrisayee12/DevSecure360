@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/489.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=debug+mode+production
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Debug mode enabled in production is a well-documented misconfiguration per OWASP.
+
+rule_id: php_expose_php
+language: php
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-489
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: PHP expose_php = On reveals server PHP version in X-Powered-By response header
+message: |-
+  The PHP application has expose_php enabled (the default), causing all HTTP responses to include an X-Powered-By: PHP/x.y.z header that reveals the exact PHP version. Attackers use this to identify the server's PHP version and target known CVEs specific to that release, significantly reducing reconnaissance effort required before exploitation.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Disable expose_php in php.ini to suppress PHP version disclosure in HTTP headers.
+
+  UNSAFE (php.ini):
+    expose_php = On
+
+  SAFE:
+    ; In php.ini:
+    expose_php = Off
+
+    ; Or remove programmatically (before output):
+    header_remove("X-Powered-By");
+
+  Also remove server version banners from your web server configuration (ServerTokens Prod for Apache, server_tokens off for nginx).

@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: go_xpath_injection_xmlpath
+language: go
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via fmt.Sprintf() formatting
+message: |-
+  Building XPath queries by injecting unescaped user input via fmt.Sprintf() allows attackers to modify the XPath tree traversal and access restricted data.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- xmlpath.MustCompile(fmt.Sprintf(
+sanitizers:
+- xmlpath.MustCompile(
+remediation: |-
+  Use parameterized XML/XPath queries if supported, or strictly validate the user input to contain only alphanumeric characters. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

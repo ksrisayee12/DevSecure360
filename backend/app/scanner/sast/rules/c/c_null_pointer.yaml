@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/476.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Null pointer dereference without prior null check verified from CodeQL C/C++ standard libraries. Rule is Tentative.
+
+rule_id: c_null_pointer
+language: c
+vuln_class: Null Pointer Dereference
+severity: High
+cwe: CWE-476
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Null Pointer Dereference
+message: |-
+  A pointer is dereferenced without first checking if it is NULL. This can lead to application crashes and Denial of Service.
+sources:
+- gets(
+- fgets(
+- scanf(
+- fscanf(
+- sscanf(
+- read(
+- recv(
+- recvfrom(
+- getenv(
+- argv[
+sinks:
+- '*'
+- ->
+sanitizers:
+- if (
+- if(
+remediation: |-
+  Always check that pointers returned from functions (especially memory allocation like malloc or library calls) are not NULL before dereferencing them.

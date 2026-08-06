@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input passed to HTTP client libraries allows Server-Side Request Forgery.
+
+rule_id: go_ssrf_fasthttp
+language: go
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via fasthttp client
+message: |-
+  Passing unvalidated user input as a URL to fasthttp.Do() or fasthttp.Get() allows SSRF, enabling the attacker to probe internal microservices.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- fasthttp.Get(
+- fasthttp.Do(
+sanitizers:
+- url.Parse
+remediation: |-
+  Parse the URL and validate the hostname against a strict allowlist. Block requests to internal IPs. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

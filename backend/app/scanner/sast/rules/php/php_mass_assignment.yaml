@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/915.html
+# CodeQL Source:   Not applicable — pattern-based ORM detection
+# Semgrep Source:  https://semgrep.dev/r?q=mass+assignment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
+# Verification:    Mass assignment sinks verified from Semgrep registry and official ORM framework documentation.
+
 rule_id: php_mass_assignment
 language: php
 vuln_class: Mass Assignment

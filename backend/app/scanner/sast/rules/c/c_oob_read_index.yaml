@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: c_oob_read_index
+language: c
+vuln_class: Out-of-bounds Read
+severity: High
+cwe: CWE-125
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Out-of-bounds Read via unchecked array index access without upper-bound validation
+message: |-
+  An array is accessed with an index derived from user-controlled or external input without validating that the index is within the array bounds. In C, no bounds checking occurs at runtime. An attacker can supply an out-of-range index to read adjacent stack or heap memory, potentially disclosing sensitive data such as cryptographic keys, passwords, or memory addresses.
+sources: []
+sinks:
+- arr[i]
+- buf[index]
+- data[offset]
+sanitizers:
+- < sizeof(arr)
+- < MAX_INDEX
+remediation: |-
+  Always validate array indices against both lower (>= 0) and upper (< size) bounds before access.
+
+  UNSAFE:
+    int val = arr[user_index];  /* no bounds check */
+
+  SAFE:
+    if (user_index < 0 || (size_t)user_index >= ARRAY_SIZE) return ERROR;
+    int val = arr[user_index];
+
+  Enable runtime bounds checking with AddressSanitizer (-fsanitize=address). Prefer safer container abstractions. See CERT ARR30-C for complete guidance.

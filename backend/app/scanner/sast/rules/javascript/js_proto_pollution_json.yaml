@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1321.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/
+# Semgrep Source:  https://semgrep.dev/r?q=prototype+pollution
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html
+# Verification:    Prototype pollution sinks (Object.assign, merge, defaultsDeep) verified from CodeQL JS standard libraries.
+
+rule_id: js_proto_pollution_json
+language: javascript
+vuln_class: Prototype Pollution
+severity: High
+cwe: CWE-1321
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 7.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L
+confidence: Tentative
+issue: Prototype Pollution via JSON Parsing
+message: |-
+  Parsed JSON data containing malicious __proto__ properties is directly used in assignments or merges, corrupting prototype chains.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- JSON.parse(
+sanitizers: []
+remediation: |-
+  Implement a custom reviver function in JSON.parse() to explicitly reject __proto__ and constructor properties during parsing.

@@ -1,0 +1,52 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: go_zip_slip
+language: go
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via archive/zip entry with ../ in filename written
+  to disk
+message: |-
+  The application extracts a ZIP archive using archive/zip without validating that each entry's Name field stays within the intended extraction directory. An attacker can craft a ZIP file with entries named like ../../etc/cron.d/evil or ../../.ssh/authorized_keys, causing files to be written outside the target directory — potentially overwriting system files or config.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- zipReader.Open(
+- rc.Name
+- os.Create(
+- ioutil.WriteFile(
+sanitizers:
+- filepath.Clean(
+- filepath.Rel(
+- strings.HasPrefix(
+remediation: |-
+  Validate each archive entry name against the extraction base path before writing.
+
+  UNSAFE:
+    for _, f := range r.File {
+        os.Create(filepath.Join(dest, f.Name))  /* f.Name may contain ../ */
+    }
+
+  SAFE:
+    for _, f := range r.File {
+        target := filepath.Join(dest, f.Name)
+        if !strings.HasPrefix(filepath.Clean(target), filepath.Clean(dest)+string(os.PathSeparator)) {
+            return fmt.Errorf("zip slip detected: %s", f.Name)
+        }
+        os.Create(target)
+    }
+
+  See Snyk Zip Slip Vulnerability research and OWASP File Upload Cheat Sheet.

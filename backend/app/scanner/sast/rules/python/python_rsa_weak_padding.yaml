@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/208.html
+# CodeQL Source:   Not applicable — pattern-based comparison detection
+# Semgrep Source:  https://semgrep.dev/r?q=timing+attack
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-constant-time comparison for cryptographic secrets detected structurally. Rule is Tentative.
+
+rule_id: python_rsa_weak_padding
+language: python
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-327
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak Crypto via RSA PKCS#1 v1.5 padding — vulnerable to Bleichenbacher oracle
+  attack
+message: |-
+  The application uses RSA encryption with PKCS#1 v1.5 padding via cryptography.hazmat or pycryptodome. This padding scheme is vulnerable to the Bleichenbacher chosen-ciphertext attack (CVE-1998-0231), allowing an attacker who can submit arbitrary ciphertexts to the application to decrypt any RSA-encrypted message without the private key.
+sources: []
+sinks:
+- padding.PKCS1v15()
+- PKCS1_v1_5.new(
+- rsa.decrypt(
+- rsa.encrypt(
+sanitizers:
+- padding.OAEP(
+- SHA256(
+remediation: |-
+  Replace PKCS#1 v1.5 padding with OAEP (Optimal Asymmetric Encryption Padding) for encryption.
+
+  UNSAFE:
+    from cryptography.hazmat.primitives.asymmetric import padding
+    ciphertext = pub_key.encrypt(message, padding.PKCS1v15())
+
+  SAFE:
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives import hashes
+    ciphertext = pub_key.encrypt(
+        message,
+        padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+    )
+
+  See OWASP Cryptographic Storage Cheat Sheet and RFC 8017 for RSA-OAEP guidance.

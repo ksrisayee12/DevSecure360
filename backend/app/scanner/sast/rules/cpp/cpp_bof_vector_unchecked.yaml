@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Buffer overflow sinks (strcpy, strcat, gets, memcpy without size check) verified from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_bof_vector_unchecked
+language: cpp
+vuln_class: Buffer Overflow
+severity: High
+cwe: CWE-125
+owasp: A03:2021-Injection
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H
+confidence: Tentative
+issue: Out-of-Bounds Access via std::vector::operator[]
+message: |-
+  The application accesses std::vector elements using the unchecked operator[] with untrusted indices, which may lead to out-of-bounds memory read/write.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- operator[]
+- '['
+sanitizers: []
+remediation: |-
+  Use the std::vector::at() method instead, which bounds-checks the index and throws an std::out_of_range exception if it is invalid.

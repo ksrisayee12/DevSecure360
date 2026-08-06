@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    oci_parse() and SQLite3::exec() SQLi sinks verified from official php.net documentation.
+
+rule_id: php_oci_sqli
+language: php
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via PHP OCI8 oci_parse() with concatenated user input for Oracle
+  Database
+message: |-
+  User-supplied data is concatenated directly into an Oracle SQL query string passed to oci_parse(). Oracle supports powerful extensions including EXECUTE IMMEDIATE, UTL_HTTP, and UTL_FILE that can be abused via injection. An attacker can read all database tables, execute stored procedures, make HTTP requests via UTL_HTTP, or read/write server files.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- oci_parse(
+- oci_execute(
+sanitizers:
+- oci_bind_by_name(
+- 'oci_parse($conn, '':'
+remediation: |-
+  Use OCI8 bind variables with oci_bind_by_name() instead of concatenating user input.
+
+  UNSAFE:
+    $stmt = oci_parse($conn, "SELECT * FROM users WHERE name = '" . $_GET['name'] . "'");
+    oci_execute($stmt);
+
+  SAFE:
+    $stmt = oci_parse($conn, 'SELECT * FROM users WHERE name = :name');
+    oci_bind_by_name($stmt, ':name', $_GET['name'], -1);
+    oci_execute($stmt);
+
+  See Oracle OCI8 PHP documentation on bind variables and OWASP SQL Injection Prevention Cheat Sheet.

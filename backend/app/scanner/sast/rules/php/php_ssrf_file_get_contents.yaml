@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    User-controlled URLs passed to HTTP clients lead to SSRF, allowing internal network scanning.
+
+rule_id: php_ssrf_file_get_contents
+language: php
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Server-Side Request Forgery (SSRF) via file_get_contents() or curl_exec()
+message: |-
+  Passing user-controlled input to file_get_contents() or cURL options allows an attacker to make the PHP server initiate HTTP requests to internal IP addresses or metadata services.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- file_get_contents(
+- curl_exec(
+sanitizers:
+- filter_var(
+remediation: |-
+  Use filter_var with FILTER_VALIDATE_URL and strongly validate the host/IP against an allowlist, explicitly rejecting private networks. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

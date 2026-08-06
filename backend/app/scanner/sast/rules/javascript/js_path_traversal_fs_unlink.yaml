@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Directory traversal in file delete/upload functions allows destructive actions or RCE.
+
+rule_id: js_path_traversal_fs_unlink
+language: javascript
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Confirmed
+issue: Arbitrary File Deletion via fs.unlink()
+message: |-
+  Passing unvalidated user input to fs.unlink() allows directory traversal, enabling attackers to delete critical application or system files.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- fs.unlink(
+- fs.unlinkSync(
+sanitizers:
+- path.basename(
+remediation: |-
+  Sanitize the filename by using path.basename() and validating that the resolved path points inside the permitted file storage directory. Always ensure input validation and consult language-specific security documentation.

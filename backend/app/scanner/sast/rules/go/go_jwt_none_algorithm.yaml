@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    Allowing the 'none' algorithm or skipping signature verification bypasses JWT authentication.
+
+rule_id: go_jwt_none_algorithm
+language: go
+vuln_class: JWT Bypass
+severity: Critical
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: JWT Authentication Bypass via 'none' Algorithm
+message: |-
+  Using a JWT library without strictly enforcing the signing algorithm allows attackers to submit a token with 'alg': 'none' and bypass signature validation completely.
+sources: []
+sinks:
+- jwt.ParseUnverified(
+- jwt.SigningMethodNone
+sanitizers:
+- jwt.Parse(
+remediation: |-
+  Always use jwt.Parse() and explicitly verify the signing method in the keyfunc callback. Do not allow jwt.SigningMethodNone. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/Deserialization.qll
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    XStream.fromXML, Yaml.load, ObjectMapper.enableDefaultTyping verified from CodeQL Java libraries.
+
+rule_id: java_deser_jackson_poly
+language: java
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via Jackson ObjectMapper with enableDefaultTyping()
+  polymorphic deserialization
+message: |-
+  The application configures Jackson ObjectMapper with enableDefaultTyping() or activateDefaultTyping() then deserializes user-controlled JSON. Polymorphic type handling allows JSON to specify Java class names via @class or @type fields. An attacker can inject gadget classes from common libraries on the classpath to achieve remote code execution.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- mapper.enableDefaultTyping(
+- mapper.activateDefaultTyping(
+sanitizers:
+- PolymorphicTypeValidator
+- '@JsonTypeInfo(use = JsonTypeInfo.Id.NAME'
+remediation: |-
+  Disable polymorphic type handling or restrict it using BasicPolymorphicTypeValidator.
+
+  UNSAFE:
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enableDefaultTyping();
+
+  SAFE:
+    // Do NOT call enableDefaultTyping(). Use explicit known types.
+    ObjectMapper mapper = new ObjectMapper();
+    MyClass obj = mapper.readValue(userJson, MyClass.class);
+
+  If polymorphism is required, use BasicPolymorphicTypeValidator with a strict class allowlist. See OWASP Deserialization Cheat Sheet and Jackson documentation.

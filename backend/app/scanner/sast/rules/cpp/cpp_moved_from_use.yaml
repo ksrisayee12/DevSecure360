@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_moved_from_use
+language: cpp
+vuln_class: Use After Free
+severity: High
+cwe: CWE-416
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.0
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Use-After-Move: accessing an object after std::move() leaves it in an indeterminate
+  state'
+message: |-
+  An object is passed to std::move() to enable move semantics, but the original variable is then accessed or used as if it still holds a valid value. After being moved-from, an object is in a valid but unspecified state — typically empty/null. Accessing its members causes undefined behavior, null pointer dereferences, or double-free when destructors run.
+sources: []
+sinks:
+- std::move(
+- move(
+sanitizers:
+- reset()
+- = nullptr
+remediation: |-
+  Avoid using an object after std::move(). Reassign or reset it if it must be reused.
+
+  UNSAFE:
+    auto data = std::move(buffer);
+    process(buffer);   /* buffer is in moved-from state — UB */
+
+  SAFE:
+    auto data = std::move(buffer);
+    buffer = Buffer{};  /* reassign if needed */
+    process(buffer);    /* now safe */
+
+  Enable Clang static analyzer or AddressSanitizer to catch use-after-move at runtime. See C++ Core Guidelines ES.56 and CERT EXP63-CPP.

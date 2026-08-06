@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=dos
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    Recursive entity expansion or unbounded decompression rapidly exhausts memory and CPU.
+
+rule_id: csharp_dos_xml_billion_laughs
+language: csharp
+vuln_class: DoS
+severity: High
+cwe: CWE-400
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Confirmed
+issue: Denial of Service via XmlReader DTD Processing
+message: |-
+  Configuring an XmlReaderSettings with DtdProcessing.Parse and unbounded MaxCharactersFromEntities allows the Billion Laughs entity expansion attack.
+sources: []
+sinks:
+- DtdProcessing.Parse
+sanitizers:
+- MaxCharactersFromEntities
+remediation: |-
+  Disable DTD processing (DtdProcessing.Prohibit) or strictly limit `MaxCharactersFromEntities` to prevent XML expansion attacks. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

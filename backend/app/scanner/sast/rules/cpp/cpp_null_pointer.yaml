@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/476.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Null pointer dereference without prior null check verified from CodeQL C/C++ standard libraries. Rule is Tentative.
+
+rule_id: cpp_null_pointer
+language: cpp
+vuln_class: Null Pointer Dereference
+severity: High
+cwe: CWE-476
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Null Pointer Dereference
+message: |-
+  A raw pointer is dereferenced without being checked for nullptr. This can crash the application and cause a Denial of Service.
+sources:
+- gets(
+- fgets(
+- scanf(
+- fscanf(
+- sscanf(
+- read(
+- recv(
+- recvfrom(
+- getenv(
+- argv[
+sinks:
+- '*'
+- ->
+sanitizers:
+- if (
+- if(
+remediation: |-
+  Always verify that raw pointers are not nullptr before dereferencing. Prefer using references or smart pointers to reduce the risk of null pointer exceptions.

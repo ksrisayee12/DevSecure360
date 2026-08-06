@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Exposing stack traces or verbose debug messages to users facilitates reconnaissance. Rule is Tentative.
+
+rule_id: cpp_info_exposure_what
+language: cpp
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure via std::exception::what() in HTTP Responses
+message: |-
+  Returning the output of std::exception::what() directly to users in API or HTTP responses exposes internal database errors, file paths, or network configurations.
+sources: []
+sinks:
+- what()
+sanitizers:
+- log_error
+remediation: |-
+  Catch exceptions and log `what()` securely on the backend, returning only a generic, safe error message to the client. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

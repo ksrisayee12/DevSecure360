@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow+strcpy
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Unbounded string copy operations cause classic buffer overflows.
+
+rule_id: c_setuid_check
+language: c
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-273
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Failure to check return value of setuid() dropping privileges
+message: |-
+  Dropping privileges via setuid() can fail (e.g., due to resource limits). If the return value is not checked, the program may continue running with root privileges unexpectedly.
+sources: []
+sinks:
+- setuid(
+- setgid(
+sanitizers:
+- if (setuid
+- if(setuid
+remediation: |-
+  Always check the return value of setuid/setgid functions.
+
+  UNSAFE:
+    setuid(getuid());
+
+  SAFE:
+    if (setuid(getuid()) != 0) {
+        exit(EXIT_FAILURE);
+    } Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

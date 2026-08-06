@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Path traversal sinks verified from CodeQL standard libraries and Semgrep registry.
+
+rule_id: go_path_traversal_http
+language: go
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via http.ServeFile
+message: |-
+  The application serves files using `http.ServeFile` or `http.Dir` with user-controlled paths, which can expose arbitrary files outside the web root if not properly validated.
+sources: []
+sinks:
+- http.ServeFile(
+- http.Dir(
+sanitizers: []
+remediation: |-
+  Ensure paths provided to `http.ServeFile` are strongly validated, restricted to safe directories, and cannot contain directory traversal characters.

@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: csharp_xpath_injection_xmlnode
+language: csharp
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via SelectNodes() or SelectSingleNode()
+message: |-
+  Constructing an XPath expression via string concatenation with user input and passing it to SelectNodes() allows an attacker to alter the query logic.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- SelectNodes(
+- SelectSingleNode(
+sanitizers:
+- XPathDocument
+remediation: |-
+  Avoid dynamic XPath generation. Ensure input is strictly validated or sanitized before using it in an XPath query. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

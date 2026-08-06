@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/91.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=xslt+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    XSLT processors evaluating user-controlled styles can execute code/read files.
+
+rule_id: csharp_xslt_injection
+language: csharp
+vuln_class: Code Injection
+severity: High
+cwe: CWE-91
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: XSLT Injection via XslCompiledTransform.Load() with user-controlled XSLT
+message: |-
+  Loading an XSLT stylesheet from an untrusted source can lead to arbitrary code execution if msxsl:script is enabled or XXE if DTD processing is enabled.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- transform.Load(Request
+- XslCompiledTransform().Load(Request
+sanitizers:
+- XsltSettings.Default
+remediation: |-
+  Never load XSLT stylesheets from untrusted sources. If you must, ensure enableScript is false (XsltSettings.Default). Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

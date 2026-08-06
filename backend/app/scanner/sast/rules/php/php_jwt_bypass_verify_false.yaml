@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    Allowing the 'none' algorithm or skipping signature verification bypasses JWT authentication.
+
+rule_id: php_jwt_bypass_verify_false
+language: php
+vuln_class: JWT Bypass
+severity: Critical
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'JWT Validation Bypass: Decoding without verification'
+message: |-
+  Decoding a JWT token by explicitly ignoring signature verification or bypassing the key check allows attackers to forge tokens with administrative privileges.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_FILES[
+sinks:
+- JWT::decode(
+- new Key(
+sanitizers:
+- empty key
+remediation: |-
+  Ensure a valid secret key is provided to JWT::decode() and the allowed algorithms are explicitly specified. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

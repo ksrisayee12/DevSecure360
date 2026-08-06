@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: csharp_missing_xframe_options
+language: csharp
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Frame-Options header in ASP.NET Core response allows clickjacking
+message: |-
+  The ASP.NET Core application does not set the X-Frame-Options response header, allowing the application to be embedded in an iframe by any third-party website. An attacker can exploit this with a clickjacking overlay to trick authenticated users into clicking hidden buttons, triggering unintended state-changing operations like form submissions or data deletions.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Set X-Frame-Options in ASP.NET Core middleware.
+
+  UNSAFE: No X-Frame-Options header in the response pipeline.
+  SAFE:
+    app.Use(async (context, next) => {
+        context.Response.Headers.Add("X-Frame-Options", "DENY");
+        await next();
+    });
+
+  For Razor Pages/MVC use a global filter or a centralized middleware. The Content-Security-Policy frame-ancestors directive is the modern alternative with more granular control.

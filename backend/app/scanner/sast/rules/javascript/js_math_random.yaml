@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/330.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+randomness
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-cryptographic PRNGs used for security tokens are predictable.
+
+rule_id: js_math_random
+language: javascript
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-330
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Insecure Randomness via Math.random()
+message: |-
+  Math.random() is a fast PRNG, not a cryptographically secure RNG. Do not use it for generating passwords, tokens, CSRF nonces, or any security-sensitive values.
+sources: []
+sinks:
+- Math.random()
+sanitizers:
+- crypto.randomBytes(
+- crypto.getRandomValues(
+remediation: |-
+  Use crypto.randomBytes() in Node.js or window.crypto.getRandomValues() in the browser.
+
+  SAFE:
+    const buf = crypto.randomBytes(32);
+    const token = buf.toString('hex'); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cookie
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Missing Secure or HttpOnly flags on session cookies exposes them to XSS and MitM theft.
+
+rule_id: csharp_cookie_missing_secure
+language: csharp
+vuln_class: Cookie Security
+severity: Medium
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: 'Cookie Security: Missing HttpOnly or Secure in CookieOptions'
+message: |-
+  Appending a cookie via Response.Cookies.Append() without setting HttpOnly and Secure to true leaves the cookie vulnerable to client-side script access and unencrypted network transmission.
+sources: []
+sinks:
+- new CookieOptions
+- Response.Cookies.Append(
+sanitizers:
+- HttpOnly = true
+- Secure = true
+remediation: |-
+  Set `HttpOnly = true` and `Secure = true` in the CookieOptions object before appending the cookie. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

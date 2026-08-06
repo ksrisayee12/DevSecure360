@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based template sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=server+side+template+injection
+# OWASP Cheat:     https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+# Verification:    Template engine sinks (FreeMarker, Velocity, Mako, Twig, Razor) verified from engine docs.
+
+rule_id: php_ssti_smarty
+language: php
+vuln_class: SSTI
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Server-Side Template Injection via Smarty fetch() or display() with user-controlled
+  template string
+message: |-
+  User-controlled input is passed to Smarty's fetch(), display(), or $smarty->getTemplate() methods as the template source or path. Smarty templates support {php} tags (disabled by default in Smarty 3.1.20+ but enabled in older versions) and {system()} calls. An attacker can execute arbitrary PHP code through template injection.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- $smarty->fetch($_
+- $smarty->display($_
+- $smarty->getTemplate($_
+- Smarty_Internal_Template
+sanitizers:
+- $smarty->fetch('templates/safe.tpl'
+- security_policy
+remediation: |-
+  Load Smarty templates only from server-controlled template directories. Never render user strings.
+
+  UNSAFE:
+    $smarty->display($_GET['template']);  /* SSTI / LFI */
+
+  SAFE:
+    $allowed = ['home', 'about', 'contact'];
+    $page = in_array($_GET['page'], $allowed) ? $_GET['page'] : 'home';
+    $smarty->display($page . '.tpl');
+
+  Enable Smarty's security policy with allowedPhpFunctions restricted to safe-only functions. See Smarty security documentation and OWASP SSTI testing guide.

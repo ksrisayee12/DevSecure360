@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Using user input as a format string in printf-like functions allows memory read/write.
+
+rule_id: cpp_format_string_cout
+language: cpp
+vuln_class: Format String
+severity: Critical
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Format String Vulnerability via std::printf in C++
+message: |-
+  Using std::printf or other C-style print functions with user-controlled format strings allows attackers to read or corrupt memory. C++ std::cout does not have this issue.
+sources: []
+sinks:
+- std::printf(userInput
+- printf(userInput
+sanitizers:
+- std::cout
+remediation: |-
+  Use std::cout or std::print (C++23) which are type-safe and do not interpret format strings maliciously, or use a static format string. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

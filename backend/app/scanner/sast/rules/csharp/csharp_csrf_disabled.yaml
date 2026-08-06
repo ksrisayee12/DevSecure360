@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/352.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=csrf+disabled
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Disabling CSRF protection on web endpoints is a major risk. Rule is Tentative.
+
+rule_id: csharp_csrf_disabled
+language: csharp
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-352
+owasp: A01:2021-Broken Access Control
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N
+confidence: Tentative
+issue: 'CSRF Protection missing: [IgnoreAntiforgeryToken] applied globally or to state-changing
+  actions'
+message: |-
+  Disabling anti-CSRF protection via [IgnoreAntiforgeryToken] on POST/PUT/DELETE actions leaves the application vulnerable to Cross-Site Request Forgery attacks.
+sources: []
+sinks:
+- '[IgnoreAntiforgeryToken]'
+sanitizers:
+- '[ValidateAntiForgeryToken]'
+remediation: |-
+  Remove [IgnoreAntiforgeryToken] and ensure [ValidateAntiForgeryToken] (or AutoValidateAntiforgeryToken) is applied to all state-changing HTTP endpoints. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

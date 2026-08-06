@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    Allowing the 'none' algorithm or skipping signature verification bypasses JWT authentication.
+
+rule_id: python_jwt_verify_false
+language: python
+vuln_class: JWT Bypass
+severity: Critical
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'JWT Validation Bypass: verify_signature=False'
+message: |-
+  Decoding a JWT with verify_signature=False in PyJWT ignores the cryptographic signature, allowing attackers to tamper with the token claims and elevate privileges.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- jwt.decode(
+- verify_signature=False
+sanitizers:
+- verify_signature=True
+remediation: |-
+  Always enforce signature verification by ensuring verify_signature is True (the default behavior). Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

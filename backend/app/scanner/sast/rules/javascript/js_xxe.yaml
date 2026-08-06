@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/611.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/semmle/javascript/security/dataflow/Xxe.qll
+# Semgrep Source:  https://semgrep.dev/r/javascript.lang.security.audit.xxe.xxe
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    libxmljs with noent:true allows entity expansion, leading to XXE.
+
+rule_id: js_xxe
+language: javascript
+vuln_class: XXE
+severity: High
+cwe: CWE-611
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: XML External Entity (XXE) Injection
+message: |-
+  The application parses XML data using a parser configured to resolve external entities. Attackers can read local files, access internal network resources, or cause a Denial of Service (XXE).
+sources:
+- req.query.
+- req.query[
+- req.body.
+- req.body[
+- req.params.
+- req.params[
+- req.headers[
+- req.cookies.
+- req.cookies[
+- req.get(
+- request.query.
+- request.body.
+- request.params.
+- request.headers[
+- process.env.
+- process.argv[
+- readline.question(
+sinks:
+- libxmljs.parseXmlString(
+- libxmljs.parseXml(
+sanitizers: []
+remediation: |-
+  Disable external entity resolution in your XML parser configuration. For libxmljs, ensure the noent option is false (which is the default, but verify it isn't set to true).
+
+  UNSAFE:
+    libxmljs.parseXmlString(xml, { noent: true })
+
+  SAFE:
+    libxmljs.parseXmlString(xml, { noent: false })

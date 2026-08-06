@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection+environment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    getenv() result passed to system/execvp command execution sinks from CodeQL and Semgrep.
+
+rule_id: go_env_cmdi
+language: go
+vuln_class: CMDi
+severity: High
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via os.Getenv() result passed to exec.Command without sanitization
+message: |-
+  An environment variable read with os.Getenv() is passed directly as an argument to exec.Command() or exec.CommandContext() without validation. In containerized environments, microservices, or CGI handlers, attackers may control environment variables. If the env var is used to build shell commands, arbitrary command injection is possible.
+sources:
+- os.Getenv(
+- os.LookupEnv(
+sinks:
+- exec.Command(
+- exec.CommandContext(
+sanitizers:
+- path.Clean(
+- allowlist
+remediation: |-
+  Validate environment variable values against a strict allowlist before using in exec.Command.
+
+  UNSAFE:
+    cmd := exec.Command("convert", os.Getenv("INPUT_FILE"), "output.png")
+
+  SAFE:
+    inputFile := os.Getenv("INPUT_FILE")
+    if !isAllowedFilePath(inputFile) {
+        log.Fatal("Invalid INPUT_FILE")
+    }
+    cmd := exec.Command("convert", inputFile, "output.png")
+
+  Prefer exec.Command with argument arrays (no shell). See OWASP OS Command Injection Defense Cheat Sheet.

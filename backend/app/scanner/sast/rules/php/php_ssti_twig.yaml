@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based
+# Semgrep Source:  https://semgrep.dev/r?q=ssti
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Passing user input directly as a template string leads to Template Injection (SSTI).
+
+rule_id: php_ssti_twig
+language: php
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Server-Side Template Injection (SSTI) in Twig
+message: |-
+  Creating Twig templates dynamically from unvalidated user input via Twig_Environment::createTemplate enables SSTI, allowing arbitrary code execution.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- createTemplate(
+- render(
+sanitizers:
+- Twig_Environment
+remediation: |-
+  Do not create templates from user-controlled strings. Use static Twig templates and pass user input securely via template variables. Always ensure input validation and consult language-specific security documentation.

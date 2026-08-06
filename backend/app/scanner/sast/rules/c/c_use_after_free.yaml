@@ -1,37 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/416.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Accessing a pointer after it has been freed leads to undefined behavior and potential RCE. Rule is Tentative.
+
 rule_id: c_use_after_free
 language: c
 vuln_class: Use After Free
-severity: Critical
+severity: High
 cwe: CWE-416
-owasp: A08:2021-Software and Data Integrity Failures
-cvss_score: 9.8
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+owasp: A04:2021-Insecure Design
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Tentative
-issue: Use After Free
+issue: Use After Free (UAF) Vulnerability
 message: |-
-  A pointer is used after the memory it points to has been freed. Attackers can control the freed memory region, potentially leading to arbitrary code execution if function pointers or vtables are manipulated.
-sources:
-- gets(
-- fgets(
-- scanf(
-- fscanf(
-- sscanf(
-- read(
-- recv(
-- recvfrom(
-- getenv(
-- argv[
+  Referencing memory after it has been freed can cause a program to crash or, more severely, allow an attacker to execute arbitrary code by controlling the reallocated memory.
+sources: []
 sinks:
 - free(
-sanitizers: []
+sanitizers:
+- ptr = NULL
 remediation: |-
-  Set pointers to NULL immediately after freeing them. Avoid using dangling pointers.
-
-  UNSAFE:
-    free(ptr);
-    // ... later ...
-    ptr->value = 10;
-
-  SAFE:
-    free(ptr);
-    ptr = NULL;
+  Immediately set the pointer to NULL after freeing it (e.g., `free(ptr); ptr = NULL;`). Ensure logic flow cannot access the pointer after deallocation. Always review your code and apply strict validation. Consult secure coding best practices.

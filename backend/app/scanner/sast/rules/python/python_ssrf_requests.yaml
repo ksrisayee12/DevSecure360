@@ -1,76 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    User-controlled URLs passed to HTTP clients lead to SSRF, allowing internal network scanning.
+
 rule_id: python_ssrf_requests
 language: python
 vuln_class: SSRF
 severity: High
 cwe: CWE-918
-owasp: A10:2021-Server-Side Request Forgery
-cvss_score: 8.6
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
 confidence: Confirmed
-issue: Server-Side Request Forgery via requests or urllib
+issue: Server-Side Request Forgery (SSRF) via requests module
 message: |-
-  User input is used to construct a URL that the server then fetches using libraries like requests, urllib, urllib3, or pycurl. An attacker can force the server to make HTTP requests to arbitrary internal or external domains, potentially accessing internal meta-data services (e.g. AWS IMDS), internal APIs, or bypassing IP allowlists.
+  Passing unvalidated user input to requests.get() or requests.post() enables SSRF. The application can be used as a proxy to attack internal systems or read cloud metadata (e.g., AWS IMDS).
 sources:
-- request.args.get(
-- request.args[
-- request.form.get(
-- request.form[
-- request.json
-- request.get_json(
+- request.args
+- request.form
 - request.data
-- request.values.get(
-- request.values[
-- request.cookies.get(
-- request.cookies[
-- request.headers.get(
-- request.headers[
-- request.files.get(
-- request.stream
-- request.GET.get(
-- request.GET[
-- request.POST.get(
-- request.POST[
-- request.body
-- request.META.get(
-- request.COOKIES.get(
-- request.FILES.get(
-- Query(
-- Body(
-- Form(
-- Path(
-- Header(
-- Cookie(
-- os.environ.get(
-- os.environ[
-- os.getenv(
-- sys.argv[
-- input(
+- request.json
+- request.GET
+- request.POST
 sinks:
 - requests.get(
 - requests.post(
-- requests.put(
-- requests.delete(
-- requests.request(
-- requests.Session(
-- urllib.request.urlopen(
-- urllib.request.urlretrieve(
-- urllib.urlopen(
-- httplib.HTTPConnection(
-- http.client.HTTPConnection(
-- aiohttp.ClientSession(
-- httpx.get(
-- httpx.post(
-- httpx.Client(
-- urllib3.PoolManager(
-- pycurl.Curl(
-sanitizers: []
+sanitizers:
+- urllib.parse
 remediation: |-
-  Do not allow users to specify arbitrary URLs for the server to fetch. If dynamic URL fetching is required, validate the URL against a strict allowlist of permitted hostnames and protocols.
-
-  UNSAFE:
-    response = requests.get(request.args.get('url'))
-
-  SAFE:
-    url = request.args.get('url')
-    if url in ['https://api.example.com', 'https://api2.example.com']:
-        response = requests.get(url)
+  Validate the URL scheme and hostname. Ensure the resolved IP address does not fall into private network ranges (e.g., using the ipaddress module). Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

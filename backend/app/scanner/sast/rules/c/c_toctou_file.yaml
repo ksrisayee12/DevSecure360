@@ -1,0 +1,39 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/362.html
+# CodeQL Source:   Not applicable — structural pattern detection
+# Semgrep Source:  Not applicable — CFG-based TOCTOU detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Signal handler and TOCTOU race patterns verified from CWE-362 and CERT C Coding Standard.
+
+rule_id: c_toctou_file
+language: c
+vuln_class: Race Condition
+severity: High
+cwe: CWE-367
+owasp: A01:2021-Broken Access Control
+cvss_score: 6.3
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'TOCTOU race: checking file access with access() then opening with open() allows
+  symlink attacks'
+message: |-
+  The program checks file accessibility with access() and then opens the file with open(). Between the check (Time-Of-Check) and the use (Time-Of-Use) an attacker can replace the target file with a symlink to a sensitive file (e.g., /etc/shadow). The program then opens the attacker's symlink with elevated privileges, bypassing the intended access check.
+sources: []
+sinks:
+- access(
+- faccessat(
+sanitizers:
+- O_NOFOLLOW
+remediation: |-
+  Eliminate the TOCTOU window by opening the file directly and checking the result atomically.
+
+  UNSAFE:
+    if (access(path, R_OK) == 0) {
+        fd = open(path, O_RDONLY);  /* race window here */
+    }
+
+  SAFE:
+    fd = open(path, O_RDONLY | O_NOFOLLOW);  /* atomic, no symlink follow */
+    if (fd < 0) { /* handle error */ }
+
+  Use O_NOFOLLOW to reject symlinks. Run with minimal privileges. See CERT FIO45-C.

@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based template sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=server+side+template+injection
+# OWASP Cheat:     https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+# Verification:    Template engine sinks (FreeMarker, Velocity, Mako, Twig, Razor) verified from engine docs.
+
+rule_id: go_ssrf_redirect
+language: go
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Tentative
+issue: SSRF via Go http.Client following 3xx redirects to internal/private network
+  hosts
+message: |-
+  The Go application uses http.Client with the default redirect policy (CheckRedirect=nil) to fetch user-controlled URLs. An attacker can supply an external URL that performs a server-side redirect to an internal host (e.g., http://attacker.com -> 302 -> http://169.254.169.254). The client follows the redirect, bypassing URL allowlist checks performed only on the initial URL.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+- r.MultipartForm
+sinks:
+- http.Get(
+- http.Client{}.Get(
+- client.Get(
+sanitizers:
+- CheckRedirect
+- validateInternalURL(
+remediation: |-
+  Set a custom CheckRedirect function that validates each redirected URL against the allowlist.
+
+  UNSAFE:
+    resp, _ := http.Get(userURL)  /* follows redirects to internal hosts */
+
+  SAFE:
+    client := &http.Client{
+        CheckRedirect: func(req *http.Request, via []*http.Request) error {
+            if !isAllowedHost(req.URL.Host) {
+                return fmt.Errorf("redirect to blocked host: %s", req.URL.Host)
+            }
+            return nil
+        },
+    }
+    resp, _ := client.Get(userURL)
+
+  Block private IP ranges at each redirect step. See OWASP SSRF Prevention Cheat Sheet.

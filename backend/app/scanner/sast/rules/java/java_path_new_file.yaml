@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/PathTraversal.qll
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    new File(), Files.readAllBytes path traversal sinks from CodeQL Java libraries.
+
+rule_id: java_path_new_file
+language: java
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via new File() or Files.readAllBytes() with user-controlled
+  filename
+message: |-
+  User-supplied input constructs a File object or is passed to Files.readAllBytes() without canonicalization. An attacker can supply path traversal sequences like ../../../etc/passwd to escape the intended directory and read arbitrary files from the server filesystem, including application secrets, credentials, and private keys.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new File(
+- new FileInputStream(
+- Files.readAllBytes(
+- Files.write(
+- FileOutputStream(
+sanitizers:
+- getCanonicalPath(
+- Path.normalize(
+remediation: |-
+  Canonicalize the file path and verify it starts with the intended base directory.
+
+  UNSAFE:
+    new File(baseDir + "/" + userInput);
+
+  SAFE:
+    File f = new File(baseDir, userInput);
+    if (!f.getCanonicalPath().startsWith(new File(baseDir).getCanonicalPath()))
+        throw new SecurityException("Path traversal detected");
+
+  See OWASP Path Traversal defense guide for complete Java file access hardening guidance.

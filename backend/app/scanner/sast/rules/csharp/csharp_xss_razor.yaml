@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/79.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xss
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+# Verification:    XSS sinks verified from CodeQL standard libraries and OWASP XSS Prevention Cheat Sheet.
+
+rule_id: csharp_xss_razor
+language: csharp
+vuln_class: XSS
+severity: High
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: XSS via Html.Raw in Razor
+message: |-
+  The application outputs unencoded user input in a Razor view using `@Html.Raw()`, which overrides default encoding protections and leads to Cross-Site Scripting.
+sources: []
+sinks:
+- '@Html.Raw('
+sanitizers: []
+remediation: |-
+  Avoid using `@Html.Raw()` with user-supplied data. Rely on the default auto-encoding of Razor views by using standard `@variable` syntax.

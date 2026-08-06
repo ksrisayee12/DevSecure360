@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Unsafe deserialization (e.g., yaml.load without SafeLoader) allows arbitrary code execution.
+
+rule_id: csharp_deserialization_yaml
+language: csharp
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via YamlDotNet
+message: |-
+  Using YamlDotNet to deserialize untrusted YAML without configuring it strictly can lead to arbitrary code execution if type instantiation is permitted.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- new DeserializerBuilder()
+- yaml.Deserialize(
+sanitizers:
+- WithNodeTypeResolver(
+remediation: |-
+  Configure the DeserializerBuilder securely by restricting allowed types, or avoid deserializing untrusted YAML into complex object types. Always ensure input validation and consult language-specific security documentation.

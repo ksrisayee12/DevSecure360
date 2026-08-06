@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow+strcpy
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Unbounded string copy operations cause classic buffer overflows.
+
+rule_id: cpp_strcpy_buffer_overflow
+language: cpp
+vuln_class: Buffer Overflow
+severity: Critical
+cwe: CWE-120
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Buffer Overflow via std::strcpy() into fixed-size char array
+message: |-
+  Copying a user-controlled string into a fixed-size char array using std::strcpy() causes a buffer overflow if the source string is too large, potentially leading to RCE.
+sources: []
+sinks:
+- std::strcpy(
+- strcpy(
+sanitizers:
+- std::string
+- strncpy(
+remediation: |-
+  Use std::string for strings in C++ to automatically manage memory and avoid overflows.
+
+  UNSAFE:
+    char buf[10]; std::strcpy(buf, userInput);
+
+  SAFE:
+    std::string buf = userInput; Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

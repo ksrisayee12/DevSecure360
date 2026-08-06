@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    JWT bypass sinks verified from Semgrep registry and official JWT library documentation.
+
+rule_id: csharp_jwt_bypass
+language: csharp
+vuln_class: JWT Bypass
+severity: High
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: JWT Verification Bypass (None Algorithm)
+message: |-
+  The application validates JSON Web Tokens without enforcing signature validation or disabling the 'none' algorithm, allowing attackers to easily forge admin tokens.
+sources: []
+sinks:
+- TokenValidationParameters
+sanitizers:
+- RequireSignedTokens = true
+- ValidateIssuerSigningKey = true
+remediation: |-
+  Configure TokenValidationParameters to explicitly set RequireSignedTokens = true and ValidateIssuerSigningKey = true to ensure all tokens have valid cryptographic signatures.

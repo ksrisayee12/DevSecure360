@@ -1,0 +1,35 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    XPath injection sinks verified from CodeQL standard libraries.
+
+rule_id: go_xpath_injection
+language: go
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: XPath Injection via Unsanitized Input
+message: |-
+  User input is concatenated into an XPath expression, allowing attackers to modify the query structure and access unauthorized parts of the XML document.
+sources:
+- http.Request
+- r.URL.Query().Get(
+- r.FormValue(
+- r.PostFormValue(
+- r.Header.Get(
+- r.Cookie(
+- r.Body
+- os.Getenv(
+- os.Args[
+sinks:
+- xmlpath.MustCompile(
+- xmlpath.Compile(
+sanitizers: []
+remediation: |-
+  Do not concatenate user input directly into XPath queries. Use parameterized queries if supported by the library, or strictly validate and sanitize the input against a strict allowlist before inclusion.

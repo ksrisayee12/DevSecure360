@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    OS command execution with shell=True or direct string passing allows RCE.
+
+rule_id: c_system_command_injection
+language: c
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: OS Command Injection via system() with user-controlled input
+message: |-
+  Passing user-controlled strings to the system() function allows OS command injection. An attacker can append shell metacharacters (e.g., ; or |) to execute arbitrary commands.
+sources: []
+sinks:
+- system(
+sanitizers:
+- execve(
+- execvp(
+remediation: |-
+  Avoid system() and popen(). Use the exec() family of functions which do not invoke a shell.
+
+  UNSAFE:
+    system(userInput);
+
+  SAFE:
+    execvp(args[0], args); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based pattern detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Integer overflow before memory allocation verified from CodeQL C/C++ standard libraries. Rule is Tentative.
+
+rule_id: cpp_int_overflow_arithmetic
+language: cpp
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-190
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H
+confidence: Tentative
+issue: Integer Overflow in Allocation Arithmetic
+message: |-
+  The application performs multiplication or addition on variables before passing them to memory allocation functions without verifying for arithmetic overflow.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- '*'
+- +
+sanitizers: []
+remediation: |-
+  Implement safe math routines (e.g., checking for overflow explicitly) before relying on arithmetic results for buffer sizing.

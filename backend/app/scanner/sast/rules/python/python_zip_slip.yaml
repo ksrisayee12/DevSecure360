@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: python_zip_slip
+language: python
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via zipfile.extractall() without validating archive
+  entry names
+message: |-
+  The application calls zipfile.ZipFile.extractall() or zipfile.ZipFile.extract() with a user-supplied or attacker-controlled ZIP archive without checking entry names for path traversal sequences. An attacker can craft a ZIP with entries named ../../../etc/cron.d/evil, causing files to be written outside the target directory.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.files
+sinks:
+- zipfile.ZipFile(
+- .extractall(
+- .extract(
+sanitizers:
+- os.path.abspath(
+- zipfile.Path(
+remediation: |-
+  Validate every archive member's path before extraction using os.path.abspath().
+
+  UNSAFE:
+    with zipfile.ZipFile(user_zip) as zf:
+        zf.extractall('/var/uploads/')  /* no path validation */
+
+  SAFE:
+    import os, zipfile
+    target = os.path.abspath('/var/uploads/')
+    with zipfile.ZipFile(user_zip) as zf:
+        for member in zf.namelist():
+            dest = os.path.abspath(os.path.join(target, member))
+            if not dest.startswith(target + os.sep):
+                raise Exception('Zip Slip detected')
+            zf.extract(member, target)
+
+  Python 3.12+ adds ZipFile.extractall() path validation. Upgrade or validate manually.

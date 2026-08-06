@@ -1,30 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/90.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=ldap+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html
+# Verification:    User input in LDAP queries without escaping enables auth bypass.
+
 rule_id: csharp_ldap_injection
 language: csharp
 vuln_class: LDAP Injection
-severity: High
+severity: Critical
 cwe: CWE-90
 owasp: A03:2021-Injection
-cvss_score: 7.5
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Confirmed
-issue: LDAP Injection via DirectorySearcher
+issue: LDAP Injection via unescaped string concatenation in DirectorySearcher filter
 message: |-
-  User input is used to dynamically construct LDAP search filters. Attackers can inject special characters to bypass authentication or extract unauthorized information.
+  Constructing an LDAP filter string via concatenation with user input allows LDAP injection. An attacker can bypass authentication or extract sensitive directory information.
 sources:
-- Request.QueryString[
+- Request.Query[
 - Request.Form[
-- Request.Cookies[
 - Request.Headers[
-- Request.Params[
-- Request.Item[
-- HttpContext.Request.Query[
-- HttpContext.Request.Form[
-- Environment.GetEnvironmentVariable(
-- Environment.GetCommandLineArgs(
+- HttpContext.Request
 sinks:
 - new DirectorySearcher(
-- .Filter =
 sanitizers:
-- AntiXssEncoder.XmlAttributeEncode(
-- AntiXssEncoder.HtmlEncode(
-remediation: "Escape LDAP special characters (*, (, ), \\, \0) before including user input in LDAP queries. The AntiXssLibrary provides LDAP encoding methods.\n\nUNSAFE:\n  searcher.Filter = \"(uid=\" + username + \")\";\n\nSAFE:\n  // Properly escape username using a dedicated LDAP encoder"
+- Encoder.LdapFilterEncode(
+remediation: |-
+  Use Microsoft.Security.Application.Encoder.LdapFilterEncode() to escape user input before including it in an LDAP filter. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

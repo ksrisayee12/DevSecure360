@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   Not applicable — absence-based flag detection
+# Semgrep Source:  https://semgrep.dev/r?q=cookie+security
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Cookie security detection checks for absence of Secure/HttpOnly flags. Structural. Rule is Tentative.
+
 rule_id: js_cookie_security
 language: javascript
 vuln_class: Cookie Security
@@ -6,7 +13,7 @@ cwe: CWE-614
 owasp: A05:2021-Security Misconfiguration
 cvss_score: 4.3
 cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:N/A:N
-confidence: Confirmed
+confidence: Tentative
 issue: Insecure Cookie Configuration
 message: |-
   Cookies are set without the Secure or HttpOnly flags. This allows them to be intercepted over unencrypted HTTP connections or accessed via XSS attacks, leading to session hijacking.

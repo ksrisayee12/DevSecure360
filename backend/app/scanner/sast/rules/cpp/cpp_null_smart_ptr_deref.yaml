@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/14.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=memset+optimization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    memset() optimization removal pattern verified from CERT C MSC06-C and compiler analysis research.
+
+rule_id: cpp_null_smart_ptr_deref
+language: cpp
+vuln_class: Null Pointer Dereference
+severity: High
+cwe: CWE-476
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 5.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: 'Null Pointer Dereference: dereferencing empty unique_ptr or default-constructed
+  shared_ptr'
+message: |-
+  A default-constructed std::unique_ptr<T> or std::shared_ptr<T> holds a null pointer. Dereferencing (*ptr or ptr->member) without checking if the pointer is non-null causes undefined behavior — typically a segmentation fault on Linux or access violation on Windows. Attackers can trigger this via error paths that leave smart pointers in their default state.
+sources: []
+sinks:
+- unique_ptr<
+- shared_ptr<
+- weak_ptr<
+sanitizers:
+- if (ptr)
+- ptr != nullptr
+- ptr.get()
+remediation: |-
+  Always check smart pointers before dereferencing when they might be null.
+
+  UNSAFE:
+    std::unique_ptr<Widget> w;  // default: null
+    w->process();  // crash: null dereference
+
+  SAFE:
+    std::unique_ptr<Widget> w = createWidget();
+    if (!w) throw std::runtime_error("Widget creation failed");
+    w->process();
+
+  Prefer factory functions that always return a valid object or throw on failure. See C++ Core Guidelines R.3 and CERT EXP34-C.

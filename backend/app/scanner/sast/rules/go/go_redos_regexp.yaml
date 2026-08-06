@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    ReDoS detection is pattern-based on catastrophic backtracking regex literals. Rule is Tentative.
+
+rule_id: go_redos_regexp
+language: go
+vuln_class: ReDoS
+severity: Medium
+cwe: CWE-1333
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Tentative
+issue: ReDoS (Go regexp engine is generally safe, but complex parsing can still degrade
+  performance)
+message: |-
+  While Go's regexp package uses RE2 and guarantees linear time, very large inputs or poorly structured repetitive patterns may still consume excessive CPU resources.
+sources: []
+sinks:
+- regexp.MustCompile(
+- regexp.MatchString(
+sanitizers:
+- time.After
+remediation: |-
+  Go's regexp package is natively resistant to catastrophic backtracking. However, enforce strict length limits on input strings to prevent overall resource exhaustion. Always ensure input validation and consult language-specific security documentation.

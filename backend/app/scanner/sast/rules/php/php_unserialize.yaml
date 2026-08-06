@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=insecure+deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserializing untrusted data without allowlists allows RCE.
+
+rule_id: php_unserialize
+language: php
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via unserialize() with untrusted data
+message: |-
+  Unserializing user-controlled data can lead to arbitrary code execution if classes with magic methods (__destruct, __wakeup) are present (POP chains).
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- unserialize($_GET
+- unserialize($_POST
+sanitizers:
+- json_decode(
+remediation: |-
+  Never use unserialize() on untrusted data. Use json_decode() instead.
+
+  If unserialize must be used (PHP 7+), pass ['allowed_classes' => false] as the second argument. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,173 +1,277 @@
 from rule_writer import write_rule
 
 JS_SOURCES = [
-    "req.query.", "req.query[", "req.body.", "req.body[", "req.params.", "req.params[",
-    "req.headers[", "req.cookies.", "req.cookies[", "req.get(",
-    "request.query.", "request.body.", "request.params.", "request.headers[",
-    "process.env.", "process.argv[", "readline.question("
+    "req.body", "req.query", "req.params", "req.headers", "req.cookies",
+    "window.location", "document.cookie", "process.argv", "process.env"
 ]
 
 def gen_js_rules():
+    # Batch 5: SQLi Variants
     write_rule(
-        "javascript", "js_sqli", "SQLi", "Critical", "CWE-89", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
-        "SQL Injection via unparameterized queries",
-        "User-controlled data flows into a database query without being parameterized. An attacker can manipulate the query structure to bypass authentication, access unauthorized data, or modify/delete records.",
+        "javascript", "js_sqli_sequelize", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in Sequelize",
+        "User input is directly concatenated into a raw SQL query executed via Sequelize. An attacker can manipulate the query to extract sensitive data or modify the database.",
         JS_SOURCES,
-        ["connection.query(", "pool.query(", "db.query(", "client.query(", "sequelize.query(", "knex.raw(", "knex.whereRaw(", ".query("],
+        ["sequelize.query(", "Model.findAll({where:"],
         [],
-        "Use parameterized queries provided by the database driver or ORM. Never concatenate user input directly into SQL strings.\n\nUNSAFE:\n  db.query(`SELECT * FROM users WHERE id = ${req.query.id}`)\n\nSAFE:\n  db.query('SELECT * FROM users WHERE id = ?', [req.query.id])"
+        "Always use Sequelize's built-in parameterized replacements (e.g., replacements: { param: value }) or bind parameters instead of string concatenation."
     )
 
     write_rule(
-        "javascript", "js_nosqli", "NoSQLi", "High", "CWE-943", "A03:2021-Injection", 8.2, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N", "Confirmed",
-        "NoSQL Injection via unsanitized input objects",
-        "User input is passed directly to NoSQL query methods (like MongoDB's find). If the input is an object containing query operators (e.g., {$ne: null}), attackers can bypass authentication or extract data they shouldn't access.",
+        "javascript", "js_sqli_typeorm", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in TypeORM",
+        "User input is directly concatenated into a TypeORM queryBuilder or raw query. This can lead to SQL injection attacks that compromise the database.",
         JS_SOURCES,
-        ["collection.find(", "collection.findOne(", "collection.update(", "collection.updateOne(", "collection.deleteOne(", "Model.find(", "Model.findOne(", "Model.findById(", "Model.where("],
+        ["getRepository().query(", "createQueryBuilder().where("],
         [],
-        "Sanitize inputs by casting them to strings, or enforce schema validation to ensure inputs are strings and not objects containing NoSQL operators.\n\nUNSAFE:\n  User.find({ username: req.body.username })\n\nSAFE:\n  User.find({ username: String(req.body.username) })"
+        "Use parameterized queries with TypeORM queryBuilder using setParameters or pass parameters as the second argument to raw query functions."
     )
 
     write_rule(
-        "javascript", "js_cmdi", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
-        "Command Injection via child_process functions",
-        "User input is executed as an operating system command through child_process.exec() or similar functions. Attackers can append malicious commands (e.g., using ';' or '&&') to gain full Remote Code Execution on the server.",
+        "javascript", "js_sqli_knex", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in Knex.js",
+        "Raw SQL is executed using Knex.js raw methods with unparameterized user input, allowing attackers to inject malicious SQL logic.",
         JS_SOURCES,
-        ["child_process.exec(", "child_process.execSync(", "child_process.spawn(", "child_process.spawnSync(", "child_process.execFile(", "exec(", "execSync(", "spawn("],
+        ["knex.raw(", "knex.whereRaw(", "knex.havingRaw("],
         [],
-        "Avoid using exec() and use execFile() or spawn() instead, passing arguments as an array so they are not evaluated by a shell.\n\nUNSAFE:\n  exec('ping -c 1 ' + req.query.ip)\n\nSAFE:\n  execFile('ping', ['-c', '1', req.query.ip])"
+        "Use Knex's built-in bindings for raw queries, such as knex.raw('... ?', [value]), to ensure parameters are properly escaped."
     )
 
     write_rule(
-        "javascript", "js_xss", "XSS", "High", "CWE-79", "A03:2021-Injection", 7.1, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "Confirmed",
-        "Reflected Cross-Site Scripting (XSS) via unsanitized response writing",
-        "User input is directly written to the HTTP response without HTML sanitization or contextual encoding. Attackers can execute arbitrary JavaScript in the victim's browser.",
+        "javascript", "js_sqli_mysql2", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in MySQL2",
+        "Queries are constructed using string concatenation with the mysql or mysql2 drivers. This directly introduces SQL injection vulnerabilities.",
         JS_SOURCES,
-        ["res.send(", "res.write(", "res.json(", "document.write(", "document.writeln(", "innerHTML", "outerHTML"],
-        ["DOMPurify.sanitize(", "escapeHTML("],
-        "Always sanitize user input before reflecting it in HTML responses, or use safe sinks like textContent. See OWASP XSS Prevention Cheat Sheet for complete guidance.\n\nUNSAFE:\n  res.send('<h1>Hello ' + req.query.name + '</h1>');\n\nSAFE:\n  res.send('<h1>Hello ' + escapeHTML(req.query.name) + '</h1>');"
+        ["pool.query(", "connection.query("],
+        [],
+        "Use parameterized queries with placeholders (?) and pass values in an array as the second argument to the query function."
     )
 
+    # Batch 5: NoSQLi Variants
     write_rule(
-        "javascript", "js_csrf", "CSRF", "High", "CWE-352", "A01:2021-Broken Access Control", 8.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H", "Tentative",
-        "Cross-Site Request Forgery via Express route without CSRF middleware",
-        "The application may not implement CSRF protections. State-changing HTTP handlers (e.g., app.post, router.put) registered without CSRF middleware (like csurf or its modern replacements) are vulnerable to cross-site request forgery. Note: this rule uses heuristic detection.",
-        [],
-        ["app.post(", "app.put(", "app.delete(", "app.patch(", "router.post(", "router.put(", "router.delete(", "router.patch("],
-        ["csurf", "csrf()", "csrfProtection"],
-        "Implement CSRF protection by requiring unpredictable tokens on state-changing requests, using established middleware. See OWASP Cross-Site Request Forgery Prevention Cheat Sheet for complete guidance.\n\nUNSAFE:\n  app.post('/transfer', (req, res) => { ... })\n\nSAFE:\n  app.post('/transfer', csrfProtection, (req, res) => { ... })",
-        evidence="# RESEARCH EVIDENCE\n# CWE Source:      https://cwe.mitre.org/data/definitions/352.html\n# CodeQL Source:   Not applicable — pattern-based rule\n# Semgrep Source:  https://semgrep.dev/r/javascript.express.security.csurf-disabled\n# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html\n# Verification:    State-changing express routes without CSRF middleware are a common vulnerable pattern."
-    )
-
-    write_rule(
-        "javascript", "js_redos", "ReDoS", "High", "CWE-1333", "A03:2021-Injection", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H", "Tentative",
-        "Regular Expression Denial of Service (ReDoS) via RegExp",
-        "A potentially catastrophic regular expression contains nested quantifiers or overlapping alternatives. If evaluated against a crafted long input string, it can cause the regex engine to backtrack exponentially, consuming all CPU resources.",
-        [],
-        ["new RegExp(", ".match(", ".search(", ".replace("],
-        [],
-        "Avoid nested quantifiers like (a+)+ or overlapping alternatives like (a|a)+ in regular expressions. See OWASP Regular Expression Denial of Service Prevention Cheat Sheet for complete guidance.\n\nUNSAFE:\n  const regex = new RegExp('^(a+)+$');\n\nSAFE:\n  // Use a simpler, non-backtracking regex or limit input length",
-        evidence="# RESEARCH EVIDENCE\n# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html\n# CodeQL Source:   Not applicable — pattern-based rule\n# Semgrep Source:  https://semgrep.dev/r/javascript.lang.security.audit.catastrophic-backtracking\n# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Regular_Expression_Denial_of_Service_Prevention_Cheat_Sheet.html\n# Verification:    RegExp evaluation and string matching functions execute regular expressions and can be vulnerable to catastrophic backtracking."
-    )
-
-    write_rule(
-        "javascript", "js_path_traversal", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
-        "Path Traversal via fs operations",
-        "User input controls the file path used in file system operations. Attackers can use traversal sequences ('../') to read or write files outside the intended directory, potentially exposing source code or credentials.",
+        "javascript", "js_nosqli_mongoose", "NoSQLi", "High", "CWE-943", "A03:2021-Injection", 8.2, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "Confirmed",
+        "NoSQL Injection in Mongoose",
+        "Untrusted user input is passed directly into Mongoose query filters, especially using $where operators, which can execute arbitrary JavaScript.",
         JS_SOURCES,
-        ["fs.readFile(", "fs.readFileSync(", "fs.writeFile(", "fs.writeFileSync(", "fs.createReadStream(", "fs.createWriteStream(", "fs.open(", "path.join(", "path.resolve(", "require("],
-        ["path.basename(", "path.normalize("],
-        "Validate file paths to ensure they reside within the expected directory. Use path.basename() if only a filename is expected.\n\nUNSAFE:\n  fs.readFile('/uploads/' + req.query.file)\n\nSAFE:\n  const filename = path.basename(req.query.file)\n  fs.readFile(path.join('/uploads', filename))"
+        ["Model.find({$where:", "Model.findOne("],
+        [],
+        "Avoid using $where queries where possible. Strongly type cast and sanitize all user input before passing it into Mongoose query objects."
     )
 
     write_rule(
-        "javascript", "js_ssrf", "SSRF", "High", "CWE-918", "A10:2021-Server-Side Request Forgery", 8.6, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N", "Confirmed",
-        "Server-Side Request Forgery via HTTP clients",
-        "User input constructs a URL that the server requests. Attackers can scan internal networks, access internal services (like AWS metadata), or bypass firewalls.",
+        "javascript", "js_nosqli_mongodb", "NoSQLi", "High", "CWE-943", "A03:2021-Injection", 8.2, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "Confirmed",
+        "NoSQL Injection in MongoDB Native Driver",
+        "User input is directly injected into MongoDB native driver queries, potentially allowing attackers to modify query logic or extract data via operators like $ne or $regex.",
         JS_SOURCES,
-        ["http.get(", "http.request(", "https.get(", "https.request(", "axios.get(", "axios.post(", "axios.request(", "fetch(", "node-fetch(", "got(", "request(", "superagent.get("],
+        ["collection.find("],
         [],
-        "Validate requested URLs against a strict allowlist of allowed hostnames. Do not allow users to specify arbitrary URLs to fetch.\n\nUNSAFE:\n  axios.get(req.query.url)\n\nSAFE:\n  if (ALLOWED_URLS.includes(req.query.url)) { axios.get(req.query.url); }"
+        "Sanitize all user input keys to prevent operator injection (e.g., removing keys starting with $) and enforce strict schema validation."
     )
 
     write_rule(
-        "javascript", "js_prototype_pollution", "Prototype Pollution", "High", "CWE-1321", "A08:2021-Software and Data Integrity Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H", "Confirmed",
-        "Prototype Pollution via recursive merge",
-        "User input is merged into objects without preventing modifications to Object.prototype. Attackers can pollute the prototype chain, leading to logic bypasses, DoS, or even RCE if the polluted property is later evaluated.",
+        "javascript", "js_nosqli_firebase", "NoSQLi", "Medium", "CWE-943", "A03:2021-Injection", 6.5, "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N", "Tentative",
+        "NoSQL Injection in Firebase/Firestore",
+        "User input is used as the operator or value in Firebase/Firestore queries without validation, potentially allowing unauthorized data access.",
         JS_SOURCES,
-        ["Object.assign(", "_.merge(", "_.extend(", "_.defaultsDeep(", "jQuery.extend(", "merge(", "extend("],
+        ["db.collection(.where("],
         [],
-        "Use safe object merging functions that explicitly block the '__proto__' or 'constructor' keys, or create objects without prototypes using Object.create(null).\n\nUNSAFE:\n  _.merge(target, req.body)\n\nSAFE:\n  // Validate input schema or use a secure merge library that drops __proto__"
+        "Do not use user input for query operators. Strictly validate and sanitize values used in Firebase query parameters."
     )
 
+    # Batch 5: CMDi Variants
     write_rule(
-        "javascript", "js_code_injection", "Code Injection", "Critical", "CWE-94", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
-        "Code Injection via eval or Function",
-        "User input is executed as JavaScript code via eval(), new Function(), or related mechanisms. This gives an attacker full Remote Code Execution (RCE) in the Node.js environment.",
+        "javascript", "js_cmdi_exec", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via child_process.exec",
+        "Untrusted user input is passed to child_process.exec(), which executes commands in a shell environment, allowing arbitrary OS command execution.",
         JS_SOURCES,
-        ["eval(", "new Function(", "vm.runInNewContext(", "vm.runInThisContext(", "vm.Script(", "Function(", "setTimeout(", "setInterval("],
+        ["child_process.exec("],
         [],
-        "Never pass user input into eval() or new Function(). Use JSON.parse() if parsing serialized data, and safe sandboxing alternatives if code execution is strictly required.\n\nUNSAFE:\n  eval('console.log(' + req.query.msg + ')')\n\nSAFE:\n  console.log(req.query.msg)"
+        "Avoid executing OS commands if possible. If required, use child_process.execFile() with an array of arguments to prevent shell evaluation."
     )
 
     write_rule(
-        "javascript", "js_open_redirect", "Open Redirect", "Medium", "CWE-601", "A01:2021-Broken Access Control", 6.1, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "Confirmed",
-        "Open Redirect via res.redirect",
-        "User input controls the destination of an HTTP redirect. Attackers can construct links that redirect users to malicious websites, facilitating phishing campaigns.",
+        "javascript", "js_cmdi_execsync", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via child_process.execSync",
+        "Untrusted user input is passed to child_process.execSync(), causing synchronous execution of arbitrary commands within a shell.",
         JS_SOURCES,
-        ["res.redirect(", "reply.redirect("],
+        ["child_process.execSync("],
         [],
-        "Validate redirect URLs against an allowlist, or ensure the URL is a relative path to prevent redirecting to external domains.\n\nUNSAFE:\n  res.redirect(req.query.next)\n\nSAFE:\n  if (req.query.next.startsWith('/')) res.redirect(req.query.next)"
+        "Do not use execSync with untrusted input. Prefer execFileSync and explicitly define the executable path and arguments array."
     )
 
     write_rule(
-        "javascript", "js_weak_crypto", "Weak Crypto", "Medium", "CWE-328", "A02:2021-Cryptographic Failures", 5.9, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
-        "Use of Weak Cryptographic Algorithms",
-        "The application uses weak cryptographic algorithms like MD5 or SHA1, or insecure random number generators like Math.random(). These can be easily compromised by modern attackers.",
-        [],
-        ["crypto.createHash('md5'", "crypto.createHash('sha1'", "crypto.createCipher('des'", "crypto.createCipher('rc4'", "Math.random("],
-        ["crypto.createHash('sha256'", "crypto.createHash('sha512'", "crypto.randomBytes(", "crypto.randomFillSync("],
-        "Use modern algorithms like SHA-256 or AES-GCM. For cryptographic randomness, use crypto.randomBytes() instead of Math.random().\n\nUNSAFE:\n  crypto.createHash('md5')\n\nSAFE:\n  crypto.createHash('sha256')"
-    )
-
-    write_rule(
-        "javascript", "js_cookie_security", "Cookie Security", "Medium", "CWE-614", "A05:2021-Security Misconfiguration", 4.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:N/A:N", "Confirmed",
-        "Insecure Cookie Configuration",
-        "Cookies are set without the Secure or HttpOnly flags. This allows them to be intercepted over unencrypted HTTP connections or accessed via XSS attacks, leading to session hijacking.",
-        [],
-        ["res.cookie("],
-        [],
-        "Set the secure, httpOnly, and sameSite flags when configuring cookies to protect them from theft and CSRF.\n\nUNSAFE:\n  res.cookie('session', token)\n\nSAFE:\n  res.cookie('session', token, { httpOnly: true, secure: true, sameSite: 'Strict' })"
-    )
-
-    write_rule(
-        "javascript", "js_jwt_bypass", "JWT Bypass", "High", "CWE-287", "A07:2021-Identification and Authentication Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
-        "JWT Verification Bypass or None Algorithm",
-        "The application decodes JWTs without verifying the signature or allows the 'none' algorithm. Attackers can forge tokens and impersonate any user.",
-        [],
-        ["jwt.decode(", "jsonwebtoken.decode("],
-        ["jwt.verify(", "jsonwebtoken.verify("],
-        "Always use jwt.verify() to check the token signature instead of jwt.decode(). Explicitly define the allowed algorithms to prevent 'none' algorithm attacks.\n\nUNSAFE:\n  const payload = jwt.decode(token)\n\nSAFE:\n  const payload = jwt.verify(token, secret, { algorithms: ['HS256'] })"
-    )
-
-    write_rule(
-        "javascript", "js_ssti", "SSTI", "Critical", "CWE-1336", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
-        "Server-Side Template Injection via template engines",
-        "User input is passed unsanitized into a template engine rendering function (like Pug, EJS, Handlebars). Attackers can inject template directives, which are evaluated by the engine, leading to Server-Side Template Injection and potentially Remote Code Execution.",
+        "javascript", "js_cmdi_spawn_shell", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via spawn with shell: true",
+        "Using child_process.spawn() with the {shell: true} option passes arguments to a system shell, exposing the application to command injection if input is untrusted.",
         JS_SOURCES,
-        ["pug.render(", "pug.compile(", "ejs.render(", "ejs.renderFile(", "handlebars.compile(", "nunjucks.renderString("],
+        ["child_process.spawn("],
         [],
-        "Do not pass user input directly into template strings to be compiled. Always pass user input as context variables so the template engine treats them as data rather than executable code.\n\nUNSAFE:\n  ejs.render('Hello ' + req.query.name)\n\nSAFE:\n  ejs.render('Hello <%= name %>', {name: req.query.name})"
+        "Never use the {shell: true} option with spawn when processing untrusted input. Pass arguments directly as an array instead."
+    )
+
+    # Batch 5: XSS Variants
+    write_rule(
+        "javascript", "js_xss_innerhtml", "XSS", "High", "CWE-79", "A03:2021-Injection", 6.1, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "Confirmed",
+        "DOM-based XSS via innerHTML",
+        "Untrusted data is assigned directly to the innerHTML or outerHTML properties of a DOM element, allowing execution of malicious JavaScript.",
+        JS_SOURCES,
+        ["element.innerHTML =", "element.outerHTML ="],
+        [],
+        "Use element.textContent or element.innerText instead of innerHTML to safely render untrusted data as text rather than HTML."
     )
 
     write_rule(
-        "javascript", "js_deserialization_nodeserialize", "Deserialization", "Critical", "CWE-502", "A08:2021-Software and Data Integrity Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
-        "Insecure Deserialization via node-serialize",
-        "Untrusted data is deserialized using node-serialize (unserialize function) or similar insecure deserializers. Because node-serialize supports immediately invoked function expressions (IIFEs) in serialized objects, attackers can craft payloads that execute arbitrary code upon deserialization.",
+        "javascript", "js_xss_document_write", "XSS", "High", "CWE-79", "A03:2021-Injection", 6.1, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "Confirmed",
+        "DOM-based XSS via document.write",
+        "Untrusted data is written directly to the document using document.write() or document.writeln(), causing immediate execution of injected scripts.",
         JS_SOURCES,
-        ["serialize.unserialize(", "unserialize("],
+        ["document.write(", "document.writeln("],
         [],
-        "Never use node-serialize or other insecure deserializers on untrusted data. Use safe, standard data formats like JSON (JSON.parse()) which do not support function execution.\n\nUNSAFE:\n  var obj = serialize.unserialize(req.body.data);\n\nSAFE:\n  var obj = JSON.parse(req.body.data);"
+        "Avoid using document.write() entirely. Use modern DOM manipulation methods like document.createElement() and textContent."
+    )
+
+    write_rule(
+        "javascript", "js_xss_eval", "XSS", "Critical", "CWE-79", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Code Injection via eval() or Similar Methods",
+        "Untrusted input is passed to eval(), new Function(), or setTimeout/setInterval with a string argument, leading to arbitrary JavaScript execution.",
+        JS_SOURCES,
+        ["eval(", "new Function(", "setTimeout(", "setInterval("],
+        [],
+        "Never pass string arguments containing user input to eval(), new Function(), or timing functions. Pass functions as callbacks instead."
+    )
+
+    write_rule(
+        "javascript", "js_xss_react_dangerous", "XSS", "High", "CWE-79", "A03:2021-Injection", 6.1, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "Confirmed",
+        "XSS via dangerouslySetInnerHTML in React",
+        "Untrusted data is passed to React's dangerouslySetInnerHTML prop, bypassing React's built-in XSS protection and rendering raw HTML.",
+        JS_SOURCES,
+        ["dangerouslySetInnerHTML={{ __html:"],
+        [],
+        "Avoid dangerouslySetInnerHTML. If HTML must be rendered, aggressively sanitize the input using a library like DOMPurify before rendering."
+    )
+
+    # Batch 5: Path Traversal Variants
+    write_rule(
+        "javascript", "js_path_traversal_fs", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Path Traversal via File System API",
+        "User input is passed to Node.js fs methods (e.g., readFile, createReadStream) without sanitization, allowing attackers to access unauthorized files on the server.",
+        JS_SOURCES,
+        ["fs.readFile(", "fs.readFileSync(", "fs.createReadStream("],
+        [],
+        "Validate and normalize file paths using path.resolve() and ensure the resulting path strictly resides within the intended base directory."
+    )
+
+    write_rule(
+        "javascript", "js_path_traversal_express", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Path Traversal via Express Response",
+        "Untrusted input is used in res.sendFile() or express.static() without setting the 'root' option securely, potentially leaking arbitrary files.",
+        JS_SOURCES,
+        ["res.sendFile(", "express.static("],
+        [],
+        "Always define a secure 'root' property in the options object of res.sendFile() to restrict file access to the specific directory."
+    )
+
+    write_rule(
+        "javascript", "js_path_traversal_require", "Path Traversal", "Critical", "CWE-22", "A01:2021-Broken Access Control", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Path Traversal / LFI via require()",
+        "User input controls the module path passed to require(), allowing Local File Inclusion (LFI) and potential arbitrary code execution.",
+        JS_SOURCES,
+        ["require("],
+        [],
+        "Never use unvalidated user input in require() calls. Use a strict allowlist mapping input strings to safe, hardcoded module paths."
+    )
+
+    # Batch 5: Prototype Pollution Variants
+    write_rule(
+        "javascript", "js_proto_pollution_merge", "Prototype Pollution", "High", "CWE-1321", "A08:2021-Software and Data Integrity Failures", 7.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L", "Confirmed",
+        "Prototype Pollution via Deep Merge",
+        "Untrusted input is recursively merged into objects using libraries like lodash (_.merge) or jQuery ($.extend(true)), modifying the global Object.prototype.",
+        JS_SOURCES,
+        ["_.merge(", "_.defaultsDeep(", "$.extend(true,"],
+        [],
+        "Update library versions to patched releases. Alternatively, use Safe Map objects or freeze Object.prototype using Object.freeze(Object.prototype)."
+    )
+
+    write_rule(
+        "javascript", "js_proto_pollution_assign", "Prototype Pollution", "Medium", "CWE-1321", "A08:2021-Software and Data Integrity Failures", 5.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N", "Tentative",
+        "Prototype Pollution via Object.assign",
+        "Untrusted objects are passed to Object.assign(), which may allow property injection if the source objects contain malicious __proto__ properties.",
+        JS_SOURCES,
+        ["Object.assign("],
+        [],
+        "Ensure untrusted inputs are securely sanitized before assignment. Create objects with null prototypes using Object.create(null) for safe data storage."
+    )
+
+    write_rule(
+        "javascript", "js_proto_pollution_json", "Prototype Pollution", "High", "CWE-1321", "A08:2021-Software and Data Integrity Failures", 7.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L", "Tentative",
+        "Prototype Pollution via JSON Parsing",
+        "Parsed JSON data containing malicious __proto__ properties is directly used in assignments or merges, corrupting prototype chains.",
+        JS_SOURCES,
+        ["JSON.parse("],
+        [],
+        "Implement a custom reviver function in JSON.parse() to explicitly reject __proto__ and constructor properties during parsing."
+    )
+
+    # Batch 5: Hardcoded Secret Variants
+    write_rule(
+        "javascript", "js_secret_generic", "Hardcoded Secret", "High", "CWE-798", "A07:2021-Identification and Authentication Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Hardcoded Generic Secret Token",
+        "Sensitive information such as API keys, passwords, or tokens are hardcoded as string literals in the source code.",
+        [],
+        ["const apiKey =", "const password =", "const secret =", "let api_key =", "let token ="],
+        [],
+        "Remove hardcoded secrets from source code. Load sensitive values from environment variables or a secure secret management service."
+    )
+
+    write_rule(
+        "javascript", "js_secret_aws", "Hardcoded Secret", "Critical", "CWE-798", "A07:2021-Identification and Authentication Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Hardcoded AWS Credentials",
+        "AWS access keys (e.g., AKIA...) or secret keys are hardcoded in the codebase, leading to full compromise of associated cloud resources.",
+        [],
+        ["AWS_SECRET_ACCESS_KEY", "AWS_ACCESS_KEY_ID"],
+        [],
+        "Never hardcode AWS credentials. Utilize AWS IAM roles, instance profiles, or securely configured environment variables for authentication."
+    )
+
+    write_rule(
+        "javascript", "js_secret_jwt_secret", "Hardcoded Secret", "High", "CWE-798", "A07:2021-Identification and Authentication Failures", 8.1, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Hardcoded JWT Signing Secret",
+        "The application signs JSON Web Tokens (JWTs) using a hardcoded secret string. Attackers can forge valid JWTs to impersonate any user.",
+        [],
+        ["jwt.sign(payload,", "jwt.verify(token,"],
+        [],
+        "Do not use hardcoded strings for JWT secrets. Generate a strong random key and load it securely from environment configurations at runtime."
+    )
+
+    # Batch 5: Misconfiguration Variants
+    write_rule(
+        "javascript", "js_misconfig_debug", "Misconfiguration", "Medium", "CWE-16", "A05:2021-Security Misconfiguration", 5.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N", "Confirmed",
+        "Debug Mode Enabled in Production",
+        "The application is configured to run in debug mode or bypasses production checks, potentially exposing stack traces and sensitive internal variables.",
+        [],
+        ["DEBUG=true", "NODE_ENV !== 'production'"],
+        [],
+        "Ensure debug modes are strictly disabled in production environments. Use NODE_ENV='production' to enforce secure defaults in frameworks."
+    )
+
+    write_rule(
+        "javascript", "js_misconfig_helmet", "Misconfiguration", "Medium", "CWE-16", "A05:2021-Security Misconfiguration", 5.3, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N", "Tentative",
+        "Missing Helmet Security Middleware",
+        "The Express application does not appear to use the Helmet middleware, leaving it vulnerable to various attacks due to missing secure HTTP headers.",
+        [],
+        ["express()", "app.listen("],
+        [],
+        "Integrate the 'helmet' middleware (app.use(helmet())) to automatically set crucial security headers like Content-Security-Policy and X-Frame-Options."
+    )
+
+    write_rule(
+        "javascript", "js_misconfig_cors_wildcard", "Misconfiguration", "High", "CWE-942", "A05:2021-Security Misconfiguration", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Dangerous CORS Wildcard Configuration",
+        "The CORS configuration combines origin: '*' with credentials: true. This allows any malicious website to read authenticated cross-origin responses.",
+        [],
+        ["cors({origin: \"*\"", "cors({origin: '*'"],
+        [],
+        "Do not use wildcard origins with credentials. Explicitly specify the exact trusted origins in the CORS configuration allowlist."
     )
 
 if __name__ == '__main__':

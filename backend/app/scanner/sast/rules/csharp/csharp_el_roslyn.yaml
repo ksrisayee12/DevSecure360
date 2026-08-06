@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=expression+language+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Spring EL and Roslyn expression evaluation sinks verified from CodeQL and Semgrep registry.
+
+rule_id: csharp_el_roslyn
+language: csharp
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via Microsoft.CodeAnalysis.CSharp.Scripting (Roslyn) evaluating
+  user input
+message: |-
+  User-controlled input is passed to CSharpScript.EvaluateAsync() or CSharpScript.RunAsync() from the Roslyn scripting API. This compiles and executes arbitrary C# code in the application process. An attacker can inject C# code to execute OS commands, access the filesystem, read environment variables, or exfiltrate data from within the application context.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- CSharpScript.EvaluateAsync(
+- CSharpScript.RunAsync(
+- Script.Create(
+sanitizers:
+- ScriptOptions.WithReferences(
+- ScriptOptions.WithImports(
+remediation: |-
+  Never evaluate user-controlled input with Roslyn scripting. Use a safe expression evaluator instead.
+
+  UNSAFE:
+    var result = await CSharpScript.EvaluateAsync(Request.Query["expression"]);
+
+  SAFE:
+    // Use a math-only expression parser (e.g., NCalc) for formula evaluation
+    // Never use Roslyn/CSharpScript with user input
+    var expr = new NCalc.Expression(sanitizedInput);
+    var result = expr.Evaluate();
+
+  If dynamic code is required, sandbox it in a separate AppDomain with restricted permissions. See OWASP Injection Prevention Cheat Sheet.

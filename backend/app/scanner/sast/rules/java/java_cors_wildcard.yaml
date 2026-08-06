@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — structural CORS header detection
+# Semgrep Source:  https://semgrep.dev/r?q=cors+wildcard
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
+# Verification:    CORS wildcard origin with credentials is forbidden by browser spec (RFC 6454). Rule is Tentative.
+
+rule_id: java_cors_wildcard
+language: java
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.4
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N
+confidence: Tentative
+issue: 'CORS Misconfiguration: @CrossOrigin(origins=*) on Spring controller serving
+  authenticated data'
+message: |-
+  The Spring controller is annotated with @CrossOrigin(origins="*") or WebMvcConfigurer.addCorsMappings() with allowedOrigins("*") on endpoints that return user-specific data. A wildcard combined with allowCredentials(true) is rejected by browsers, but a reflected Origin header or misconfigured policy still allows CORS bypass.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- '@CrossOrigin(origins = "*")'
+- '@CrossOrigin("*")'
+- allowedOrigins("*")
+- addAllowedOrigin("*")
+sanitizers:
+- allowedOrigins.contains(
+- '@CrossOrigin(origins = {'
+remediation: |-
+  Use an explicit list of trusted origins. Never combine wildcard with allowCredentials.
+
+  UNSAFE:
+    @CrossOrigin(origins = "*")  /* too broad for authenticated endpoints */
+    @RestController
+    public class UserController { ... }
+
+  SAFE:
+    @CrossOrigin(origins = {"https://app.example.com", "https://admin.example.com"},
+                 allowCredentials = "true")
+    @RestController
+    public class UserController { ... }
+
+  See Spring CORS documentation and OWASP HTTP Headers Reference Cheat Sheet.

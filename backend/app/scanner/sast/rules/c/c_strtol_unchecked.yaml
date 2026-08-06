@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=integer+overflow+strtol
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    strtol/atoi integer overflow without errno/LONG_MAX check from CERT C INT06-C. Rule is Tentative.
+
+rule_id: c_strtol_unchecked
+language: c
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-190
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Integer Overflow via strtol()/atoi() without ERANGE or LONG_MAX boundary validation
+message: |-
+  strtol() indicates overflow by returning LONG_MAX/LONG_MIN and setting errno=ERANGE, but if errno is not checked, a maliciously large string silently produces LONG_MAX. atoi() has no overflow detection at all. The returned value used as a buffer size, array index, or allocation size can trigger heap overflow or out-of-bounds access.
+sources: []
+sinks:
+- strtol(
+- strtoul(
+- strtoll(
+- atoi(
+- atol(
+sanitizers:
+- errno == ERANGE
+- LONG_MAX
+remediation: |-
+  Always check errno after strtol() and validate the result is within the expected range.
+
+  UNSAFE:
+    long n = strtol(user_str, NULL, 10);  /* no ERANGE check */
+    char *buf = malloc(n);                /* may overflow */
+
+  SAFE:
+    errno = 0;
+    long n = strtol(user_str, &endptr, 10);
+    if (errno == ERANGE || n < 0 || n > MAX_ALLOWED) { return ERROR; }
+    char *buf = malloc((size_t)n);
+
+  Never use atoi() for security-sensitive conversions. See CERT C INT06-C.

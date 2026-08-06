@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: csharp_zip_slip
+language: csharp
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via ZipArchiveEntry with ../ in FullName extracted
+  to disk
+message: |-
+  The application extracts ZIP archive entries using ZipArchive/ZipArchiveEntry without validating that each entry's FullName remains within the intended extraction directory. An attacker can craft a ZIP with entries like ../../appsettings.json or C:\Windows\System32\evil.dll, causing files to be written to arbitrary locations on the server filesystem.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- entry.FullName
+- ZipFile.ExtractToDirectory(
+- entry.ExtractToFile(
+sanitizers:
+- Path.GetFullPath(
+- Path.Combine(destinationPath
+remediation: |-
+  Validate each entry's destination path against the extraction root before writing.
+
+  UNSAFE:
+    foreach (var entry in archive.Entries)
+        entry.ExtractToFile(Path.Combine(destDir, entry.FullName));
+
+  SAFE:
+    foreach (var entry in archive.Entries) {
+        string dest = Path.GetFullPath(Path.Combine(destDir, entry.FullName));
+        if (!dest.StartsWith(Path.GetFullPath(destDir), StringComparison.OrdinalIgnoreCase))
+            throw new SecurityException("Zip Slip detected");
+        entry.ExtractToFile(dest);
+    }
+
+  See Snyk Zip Slip research and OWASP Path Traversal defense guide.

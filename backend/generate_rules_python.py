@@ -232,5 +232,307 @@ def gen_python_rules():
         "Validate the redirect URL against an allowlist, or ensure it is a relative path rather than an absolute URL to an external domain.\n\nUNSAFE:\n  return redirect(request.args.get('next'))\n\nSAFE:\n  next_url = request.args.get('next')\n  if next_url.startswith('/') and not next_url.startswith('//'):\n      return redirect(next_url)"
     )
 
+    # File Upload
+    write_rule(
+        "python", "python_file_upload", "File Upload", "High", "CWE-434", "A04:2021-Insecure Design", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Unrestricted Upload of File with Dangerous Type",
+        "The application allows users to upload files but does not adequately validate the file extension or type. An attacker could upload an executable file (like a .py or .php script) and execute arbitrary code.",
+        PY_SOURCES,
+        ["request.files.get(", "file.save("],
+        ["secure_filename("],
+        "Ensure uploaded files have a verified safe extension and are stored outside the web root or with randomized names. Use werkzeug.utils.secure_filename.\n\nUNSAFE:\n  file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))\n\nSAFE:\n  from werkzeug.utils import secure_filename\n  filename = secure_filename(file.filename)\n  file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))",
+        evidence="# RESEARCH EVIDENCE\n# CWE Source:      https://cwe.mitre.org/data/definitions/434.html\n# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/ArbitraryFileWrite.qll\n# Semgrep Source:  https://semgrep.dev/r/python.flask.security.audit.upload-file.upload-file\n# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html\n# Verification:    request.files and file.save() are standard Flask patterns for receiving and saving files without inherent type validation."
+    )
+
+    # Mass Assignment
+    write_rule(
+        "python", "python_mass_assignment", "Mass Assignment", "Medium", "CWE-915", "A08:2021-Software and Data Integrity Failures", 6.5, "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N", "Confirmed",
+        "Improperly Controlled Modification of Dynamically-Determined Object Attributes",
+        "The application takes a JSON or dictionary payload from the user and directly maps it to internal object attributes. An attacker can set unauthorized properties, such as granting themselves admin privileges.",
+        PY_SOURCES,
+        ["Model(**", "obj.__dict__.update(", "setattr("],
+        [],
+        "Do not bind raw user input dictionaries directly to objects. Use explicitly defined data transfer objects (DTOs) or whitelist the fields that can be modified.\n\nUNSAFE:\n  user.update(**request.json)\n\nSAFE:\n  user.email = request.json.get('email')"
+    )
+
+    # CORS Misconfiguration
+    write_rule(
+        "python", "python_cors_misconfiguration", "Misconfiguration", "Medium", "CWE-942", "A05:2021-Security Misconfiguration", 5.4, "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N", "Confirmed",
+        "Permissive Cross-Origin Resource Sharing (CORS)",
+        "The application configures CORS to allow requests from any origin ('*') along with credentials. This allows malicious sites to read sensitive data across origins.",
+        [],
+        ["CORS(app, origins=\"*\")", "CORS(app, resources={r\"/*\": {\"origins\": \"*\"}})", "flask_cors.CORS("],
+        [],
+        "Configure CORS to only allow trusted domains, never use the wildcard '*' origin when credentials are required.\n\nUNSAFE:\n  CORS(app, origins='*')\n\nSAFE:\n  CORS(app, origins=['https://trusted.example.com'])",
+        evidence="# RESEARCH EVIDENCE\n# CWE Source:      https://cwe.mitre.org/data/definitions/942.html\n# CodeQL Source:   Not applicable — pattern-based rule\n# Semgrep Source:  https://semgrep.dev/r/python.flask.security.cors-wildcard.cors-wildcard\n# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Origin_Resource_Sharing_Cheat_Sheet.html\n# Verification:    flask_cors.CORS with origins='*' enables globally permissive cross-origin requests."
+    )
+
+    # Batch 4: SQLi Variants
+    write_rule(
+        "python", "python_sqli_sqlalchemy", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in SQLAlchemy",
+        "User input is directly concatenated into a raw SQL query executed via SQLAlchemy. An attacker can manipulate the query to extract sensitive data or modify the database.",
+        PY_SOURCES,
+        ["db.session.execute(text(", "engine.execute(", ".filter(text("],
+        [],
+        "Always use SQLAlchemy's built-in parameterized queries using text('... :param').bindparams(param=value) instead of string formatting or concatenation.\n\nUNSAFE:\n  db.session.execute(text(f'SELECT * FROM users WHERE id={user_id}'))\n\nSAFE:\n  db.session.execute(text('SELECT * FROM users WHERE id=:id'), {'id': user_id})"
+    )
+
+    write_rule(
+        "python", "python_sqli_django", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in Django ORM",
+        "Raw SQL queries are constructed using string formatting and passed to Django's ORM raw(), extra(), or cursor.execute().",
+        PY_SOURCES,
+        [".extra(", ".raw(", "RawSQL(", "cursor.execute("],
+        [],
+        "Use Django ORM's standard queryset filtering methods. If raw SQL is unavoidable, always pass user input via the `params` argument.\n\nUNSAFE:\n  User.objects.raw(f'SELECT * FROM auth_user WHERE username=\"{username}\"')\n\nSAFE:\n  User.objects.raw('SELECT * FROM auth_user WHERE username=%s', [username])"
+    )
+
+    write_rule(
+        "python", "python_sqli_asyncpg", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in asyncpg",
+        "User input is interpolated directly into SQL queries executed with asyncpg, risking SQL injection.",
+        PY_SOURCES,
+        ["conn.execute(", "conn.fetch(", "conn.fetchrow("],
+        [],
+        "Use asyncpg's positional parameters ($1, $2, etc.) to pass variables securely.\n\nUNSAFE:\n  await conn.fetch(f'SELECT * FROM users WHERE name={name}')\n\nSAFE:\n  await conn.fetch('SELECT * FROM users WHERE name=$1', name)"
+    )
+
+    write_rule(
+        "python", "python_sqli_pymysql", "SQLi", "High", "CWE-89", "A03:2021-Injection", 8.5, "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "SQL Injection in pymysql",
+        "User input is concatenated into SQL queries and executed via PyMySQL cursor.execute().",
+        PY_SOURCES,
+        ["cursor.execute(f", "cursor.execute(\"{}\""],
+        [],
+        "Always pass user input as a tuple of arguments to cursor.execute() instead of formatting the SQL string directly.\n\nUNSAFE:\n  cursor.execute(f\"SELECT * FROM data WHERE id={id}\")\n\nSAFE:\n  cursor.execute(\"SELECT * FROM data WHERE id=%s\", (id,))"
+    )
+
+    # Batch 4: CMDi Variants
+    write_rule(
+        "python", "python_cmdi_os_system", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via os.system",
+        "Untrusted input is passed to os.system(). Since os.system always executes via the shell, this is highly vulnerable to command injection.",
+        PY_SOURCES,
+        ["os.system("],
+        [],
+        "Avoid os.system(). Use the subprocess module with shell=False and pass arguments as a list.\n\nUNSAFE:\n  os.system(f'ping -c 1 {ip}')\n\nSAFE:\n  subprocess.run(['ping', '-c', '1', ip])"
+    )
+
+    write_rule(
+        "python", "python_cmdi_popen", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via os.popen",
+        "Untrusted input is passed to os.popen(). Like os.system, os.popen executes via the shell and is vulnerable to injection.",
+        PY_SOURCES,
+        ["os.popen("],
+        [],
+        "Do not use os.popen(). Use subprocess.Popen or subprocess.run with shell=False.\n\nUNSAFE:\n  os.popen('ls ' + user_dir)\n\nSAFE:\n  subprocess.run(['ls', user_dir], capture_output=True)"
+    )
+
+    write_rule(
+        "python", "python_cmdi_execv", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via os.exec* variants",
+        "User input controls the executable path or arguments in os.execv, os.execve, os.execvp, or os.execvpe.",
+        PY_SOURCES,
+        ["os.execv(", "os.execve(", "os.execvp(", "os.execvpe("],
+        [],
+        "Ensure the executable path is strictly validated against an allowlist. Avoid letting users control the program being executed."
+    )
+
+    write_rule(
+        "python", "python_cmdi_asyncio", "CMDi", "Critical", "CWE-78", "A03:2021-Injection", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Command Injection via asyncio subprocess",
+        "Untrusted input is used in asyncio.create_subprocess_shell() or manipulated asynchronously.",
+        PY_SOURCES,
+        ["asyncio.create_subprocess_shell(", "asyncio.create_subprocess_exec("],
+        [],
+        "Use asyncio.create_subprocess_exec() instead of shell(), and ensure arguments are passed safely as a list, never concatenated as strings."
+    )
+
+    # Batch 4: Path Traversal Variants
+    write_rule(
+        "python", "python_path_traversal_send", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Path Traversal via Flask send_file",
+        "User input controls the file path passed to flask.send_file() or send_from_directory(), allowing attackers to download arbitrary files from the server.",
+        PY_SOURCES,
+        ["flask.send_file(", "send_from_directory(", "send_file("],
+        ["werkzeug.utils.safe_join("],
+        "Always use werkzeug.utils.safe_join() or validate the requested filename against a strict allowlist or a base directory. Never trust user-provided paths."
+    )
+
+    write_rule(
+        "python", "python_path_traversal_zip", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "Confirmed",
+        "Path Traversal via zipfile (Zip Slip)",
+        "Extracting files from an untrusted ZIP archive using extractall() without validating the file paths inside the archive.",
+        PY_SOURCES,
+        ["zipfile.ZipFile(", "ZipFile.extract(", "ZipFile.extractall("],
+        [],
+        "Iterate over archive entries and validate that their absolute path starts with the intended target directory before extracting them."
+    )
+
+    write_rule(
+        "python", "python_path_traversal_tar", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "Confirmed",
+        "Path Traversal via tarfile (Tar Slip)",
+        "Extracting files from an untrusted TAR archive using extractall() without validating paths.",
+        PY_SOURCES,
+        ["tarfile.open(", "TarFile.extract(", "TarFile.extractall("],
+        ["filter='data'"],
+        "In Python 3.11.4+, use the `filter='data'` argument in tarfile.extractall(). On older versions, manually validate that the destination path is within the target directory."
+    )
+
+    write_rule(
+        "python", "python_path_traversal_shutil", "Path Traversal", "High", "CWE-22", "A01:2021-Broken Access Control", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N", "Confirmed",
+        "Path Traversal via shutil operations",
+        "User input controls the source or destination path in shutil.copy, shutil.move, or related functions.",
+        PY_SOURCES,
+        ["shutil.copy(", "shutil.copy2(", "shutil.move(", "shutil.copyfile("],
+        [],
+        "Validate paths securely using os.path.abspath and os.path.commonpath to ensure they fall within an authorized base directory before performing file operations."
+    )
+
+    # Batch 4: SSRF Variants
+    write_rule(
+        "python", "python_ssrf_urllib3", "SSRF", "High", "CWE-918", "A10:2021-Server-Side Request Forgery", 8.6, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N", "Confirmed",
+        "Server-Side Request Forgery via urllib3",
+        "Untrusted input is used to construct a URL that the application requests using urllib3.",
+        PY_SOURCES,
+        ["urllib3.PoolManager(", "PoolManager.request("],
+        [],
+        "Validate the target URL against an allowlist of approved hostnames or IP addresses before making the request."
+    )
+
+    write_rule(
+        "python", "python_ssrf_aiohttp", "SSRF", "High", "CWE-918", "A10:2021-Server-Side Request Forgery", 8.6, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N", "Confirmed",
+        "Server-Side Request Forgery via aiohttp",
+        "Untrusted input controls the URL passed to aiohttp.ClientSession get() or post() methods.",
+        PY_SOURCES,
+        ["aiohttp.ClientSession(", "session.get(", "session.post("],
+        [],
+        "Ensure the URL domain and scheme are validated before issuing the HTTP request to prevent unauthorized internal network access."
+    )
+
+    write_rule(
+        "python", "python_ssrf_httpx", "SSRF", "High", "CWE-918", "A10:2021-Server-Side Request Forgery", 8.6, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N", "Confirmed",
+        "Server-Side Request Forgery via httpx",
+        "User input is passed to httpx request functions without validation, enabling Server-Side Request Forgery (SSRF) attacks against internal resources.",
+        PY_SOURCES,
+        ["httpx.get(", "httpx.post(", "httpx.Client(", "httpx.AsyncClient("],
+        [],
+        "Strictly validate the target URL. Consider implementing network-level egress filtering to prevent internal network scanning."
+    )
+
+    # Batch 4: Deserialization Variants
+    write_rule(
+        "python", "python_deser_yaml", "Deserialization", "Critical", "CWE-502", "A08:2021-Software and Data Integrity Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Insecure Deserialization via yaml.load",
+        "The application deserializes YAML data using yaml.load() without specifying yaml.SafeLoader, which allows the execution of arbitrary Python code.",
+        PY_SOURCES,
+        ["yaml.load("],
+        ["Loader=yaml.SafeLoader", "yaml.safe_load("],
+        "Always use yaml.safe_load() or specify Loader=yaml.SafeLoader when parsing untrusted YAML data to prevent arbitrary code execution."
+    )
+
+    write_rule(
+        "python", "python_deser_dill", "Deserialization", "Critical", "CWE-502", "A08:2021-Software and Data Integrity Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Insecure Deserialization via dill",
+        "Untrusted data is deserialized using dill.loads() or dill.load(), which can execute arbitrary code upon unpickling.",
+        PY_SOURCES,
+        ["dill.loads(", "dill.load("],
+        [],
+        "Do not use dill to deserialize untrusted data. Use a safe format like JSON (via json.loads) for data exchange."
+    )
+
+    write_rule(
+        "python", "python_deser_marshal", "Deserialization", "Critical", "CWE-502", "A08:2021-Software and Data Integrity Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Insecure Deserialization via marshal",
+        "Untrusted data is deserialized using marshal.loads(), which is explicitly documented as insecure and can crash the interpreter or execute code.",
+        PY_SOURCES,
+        ["marshal.loads(", "marshal.load("],
+        [],
+        "The marshal module is not intended to be secure against erroneous or maliciously constructed data. Never use it for untrusted data."
+    )
+
+    # Batch 4: Weak Crypto Variants
+    write_rule(
+        "python", "python_weak_crypto_pycrypto", "Weak Crypto", "High", "CWE-328", "A02:2021-Cryptographic Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Use of Weak Block/Stream Ciphers (PyCrypto/PyCryptodome)",
+        "The application uses weak ciphers like DES, ARC4, or Blowfish, which are vulnerable to modern cryptanalysis.",
+        [],
+        ["Crypto.Cipher.DES(", "Crypto.Cipher.ARC4(", "Crypto.Cipher.Blowfish("],
+        [],
+        "Replace weak ciphers with AES (Advanced Encryption Standard) in authenticated modes like GCM to ensure cryptographic security."
+    )
+
+    write_rule(
+        "python", "python_weak_crypto_ecb", "Weak Crypto", "High", "CWE-327", "A02:2021-Cryptographic Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Use of Insecure AES ECB Mode",
+        "AES is used in Electronic Codebook (ECB) mode, which does not provide serious message confidentiality because it encrypts identical plaintext blocks into identical ciphertext blocks.",
+        [],
+        ["AES.MODE_ECB"],
+        [],
+        "Never use ECB mode for cryptographic operations. Use authenticated encryption modes such as AES-GCM (AES.MODE_GCM) instead."
+    )
+
+    write_rule(
+        "python", "python_weak_crypto_rsa_small", "Weak Crypto", "High", "CWE-326", "A02:2021-Cryptographic Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Inadequate RSA Key Size",
+        "The application generates RSA keys with insufficient sizes (e.g., 512 or 1024 bits), which can be factored by well-resourced attackers.",
+        [],
+        ["RSA.generate(512)", "RSA.generate(1024)"],
+        [],
+        "Use an RSA key size of at least 2048 bits. 3072 or 4096 bits are recommended for long-term security."
+    )
+
+    write_rule(
+        "python", "python_weak_crypto_md5pwd", "Weak Crypto", "High", "CWE-916", "A02:2021-Cryptographic Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Use of MD5/SHA1 for Password Hashing",
+        "Passwords or sensitive secrets are hashed using fast, unkeyed hash functions like MD5 or SHA1 without salting, making them easily crackable.",
+        [],
+        ["hashlib.md5(password", "hashlib.sha1(password"],
+        [],
+        "Do not use MD5 or SHA1 for passwords. Use a robust, slow hashing algorithm like Argon2, bcrypt, scrypt, or PBKDF2."
+    )
+
+    # Batch 4: Hardcoded Secret Variants
+    write_rule(
+        "python", "python_secret_generic", "Hardcoded Secret", "High", "CWE-798", "A07:2021-Identification and Authentication Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Generic Hardcoded Secret (Password/API Key)",
+        "A variable explicitly named password, secret, api_key, or token is assigned a hardcoded string literal.",
+        [],
+        ["password=\"", "password='", "secret=\"", "secret='", "api_key=\"", "api_key='", "token=\"", "token='"],
+        [],
+        "Load generic secrets securely from environment variables, configuration files, or a dedicated secrets manager instead of hardcoding them."
+    )
+
+    write_rule(
+        "python", "python_secret_aws", "Hardcoded Secret", "Critical", "CWE-798", "A07:2021-Identification and Authentication Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Hardcoded AWS Credentials",
+        "AWS access keys or secret access keys are hardcoded into the source code. This can lead to complete cloud environment compromise if leaked.",
+        [],
+        ["aws_access_key_id=\"", "aws_secret_access_key=\"", "aws_access_key_id='", "aws_secret_access_key='"],
+        [],
+        "Never hardcode AWS credentials. Use IAM roles, the ~/.aws/credentials file, or load them from environment variables."
+    )
+
+    write_rule(
+        "python", "python_secret_private_key", "Hardcoded Secret", "Critical", "CWE-798", "A07:2021-Identification and Authentication Failures", 9.8, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", "Confirmed",
+        "Hardcoded Private Key",
+        "An RSA or generic private key PEM block is hardcoded directly in the source file.",
+        [],
+        ["-----BEGIN RSA PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----", "-----BEGIN OPENSSH PRIVATE KEY-----"],
+        [],
+        "Store private keys securely in key vaults or properly protected configuration files. Do not embed private key material in application code."
+    )
+
+    write_rule(
+        "python", "python_secret_connection_str", "Hardcoded Secret", "High", "CWE-798", "A07:2021-Identification and Authentication Failures", 7.5, "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", "Confirmed",
+        "Hardcoded Database Connection String with Credentials",
+        "A database connection string (e.g., SQLAlchemy or psycopg2) containing a password is hardcoded.",
+        [],
+        ["://root:", "://admin:", "://postgres:", "://sa:"],
+        ["mysql+pymysql", "postgresql", "mssql+pyodbc"],
+        "Do not embed database passwords in connection strings within the code. Load the connection URI dynamically at runtime from secure storage."
+    )
+
 if __name__ == '__main__':
     gen_python_rules()

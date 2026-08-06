@@ -1,0 +1,35 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/StackTraceExposure.qll
+# Semgrep Source:  https://semgrep.dev/r/python.lang.security.audit.stack-trace-exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Returning traceback outputs directly to clients violates CWE-209.
+
+rule_id: python_info_exposure
+language: python
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure through an Error Message (CWE-209)
+message: |-
+  The application returns detailed exception stack traces to the user (e.g., via traceback.format_exc()), exposing internal application structure.
+sources: []
+sinks:
+- traceback.format_exc()
+- traceback.print_exc()
+sanitizers: []
+remediation: |-
+  Log the detailed exception trace internally, but return a generic, safe error message to the user.
+
+  UNSAFE:
+    except Exception as e:
+        return traceback.format_exc()
+
+  SAFE:
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        return "An error occurred."

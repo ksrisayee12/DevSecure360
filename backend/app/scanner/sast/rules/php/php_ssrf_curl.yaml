@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    curl_exec() and file_get_contents() SSRF sinks verified from php.net and Semgrep registry.
+
+rule_id: php_ssrf_curl
+language: php
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Confirmed
+issue: Server-Side Request Forgery via PHP curl_exec() with user-controlled CURLOPT_URL
+message: |-
+  User-supplied input sets CURLOPT_URL in a cURL handle which is then executed server-side. An attacker can provide internal network URLs, cloud metadata endpoints (http://169.254.169.254/latest/meta-data/), or localhost addresses to make the server fetch resources on their behalf, bypassing network access controls and cloud security perimeters.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- curl_exec(
+- CURLOPT_URL
+sanitizers:
+- parse_url(
+- filter_var(
+- FILTER_VALIDATE_URL
+remediation: |-
+  Validate user-supplied URLs against an allowlist of permitted domains before executing cURL.
+
+  UNSAFE:
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $_GET["url"]);
+    curl_exec($ch);
+
+  SAFE:
+    $url = $_GET["url"];
+    $host = parse_url($url, PHP_URL_HOST);
+    if (!in_array($host, $allowedHosts)) die("Blocked");
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_exec($ch);
+
+  Block 169.254.x.x, 10.x.x.x, 172.16-31.x.x ranges. See OWASP SSRF Prevention Cheat Sheet.

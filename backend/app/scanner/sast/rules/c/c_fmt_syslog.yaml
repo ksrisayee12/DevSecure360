@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Format string vulnerable functions (printf, fprintf, sprintf, syslog) verified from CodeQL C/C++ standard libraries.
+
+rule_id: c_fmt_syslog
+language: c
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Format String Vulnerability in syslog
+message: |-
+  The application passes untrusted input directly as the format string argument to syslog(), which can lead to memory corruption or denial of service.
+sources:
+- argv
+- getenv
+- read
+- recv
+- recvfrom
+- fread
+- fgets
+- scanf
+- fscanf
+- sscanf
+- gets
+sinks:
+- syslog(
+sanitizers: []
+remediation: |-
+  Always use a static format string with syslog(), such as syslog(priority, "%s", input), to ensure input is safely parsed.

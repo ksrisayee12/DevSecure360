@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1321.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/
+# Semgrep Source:  https://semgrep.dev/r?q=prototype+pollution
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html
+# Verification:    Prototype pollution sinks (Object.assign, merge, defaultsDeep) verified from CodeQL JS standard libraries.
+
+rule_id: js_proto_pollution_merge
+language: javascript
+vuln_class: Prototype Pollution
+severity: High
+cwe: CWE-1321
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 7.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L
+confidence: Confirmed
+issue: Prototype Pollution via Deep Merge
+message: |-
+  Untrusted input is recursively merged into objects using libraries like lodash (_.merge) or jQuery ($.extend(true)), modifying the global Object.prototype.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- _.merge(
+- _.defaultsDeep(
+- $.extend(true,
+sanitizers: []
+remediation: |-
+  Update library versions to patched releases. Alternatively, use Safe Map objects or freeze Object.prototype using Object.freeze(Object.prototype).

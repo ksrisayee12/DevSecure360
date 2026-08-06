@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   Not applicable — pattern-based log sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=log+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+# Verification:    Unsanitized CRLF characters in logs allow spoofing log entries (Log Forging).
+
+rule_id: c_log_forging_syslog
+language: c
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A09:2021-Security Logging and Monitoring Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Injection (Forging) via syslog()
+message: |-
+  Logging unvalidated user input directly into syslog allows attackers to inject newline characters (CRLF) and forge fake log entries, undermining audit trails.
+sources: []
+sinks:
+- syslog(
+sanitizers:
+- str_replace(
+- remove_newlines(
+remediation: |-
+  Sanitize user input before logging by removing or escaping newline characters (\r and \n) to prevent log entry injection. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

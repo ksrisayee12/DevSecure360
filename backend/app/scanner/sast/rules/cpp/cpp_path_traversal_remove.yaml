@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Directory traversal in file delete/upload functions allows destructive actions or RCE.
+
+rule_id: cpp_path_traversal_remove
+language: cpp
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Confirmed
+issue: Arbitrary File Deletion via std::remove or std::filesystem::remove
+message: |-
+  Using unvalidated user input as the path for std::remove() allows an attacker to traverse directories and delete arbitrary files.
+sources: []
+sinks:
+- std::remove(
+- std::filesystem::remove(
+sanitizers:
+- std::filesystem::canonical(
+- basename(
+remediation: |-
+  Validate the filename using std::filesystem::path::filename() to strip directory components, ensuring deletion only occurs within a sandboxed directory. Always ensure input validation and consult language-specific security documentation.

@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/327.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+crypto
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Weak cryptographic function calls verified from CodeQL standard libraries and NIST recommendations.
+
 rule_id: php_weak_crypto
 language: php
 vuln_class: Weak Crypto

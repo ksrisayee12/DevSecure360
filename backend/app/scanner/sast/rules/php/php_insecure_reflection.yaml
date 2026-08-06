@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/php/semmle/php/security/dataflow/UnsafeReflection.qll
+# Semgrep Source:  https://semgrep.dev/r/php.lang.security.unsafe-reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Dynamic object instantiation with untrusted variables (new $userInput()) is highly dangerous.
+
+rule_id: php_insecure_reflection
+language: php
+vuln_class: Code Injection
+severity: High
+cwe: CWE-470
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Reflection / Object Instantiation (CWE-470)
+message: |-
+  The application instantiates a class or invokes a method where the class name or method name is controlled by user input. This can lead to arbitrary code execution if the attacker can instantiate malicious gadgets.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_FILES[
+- $_SERVER[
+- $HTTP_GET_VARS[
+- $HTTP_POST_VARS[
+- $HTTP_COOKIE_VARS[
+- $HTTP_RAW_POST_DATA
+- file_get_contents('php://input')
+sinks:
+- new $_
+- ReflectionClass(
+sanitizers: []
+remediation: |-
+  Never use user input directly as a class or method name. Use an explicit mapping or allowlist.
+
+  UNSAFE:
+    $class = $_GET['action'];
+    $obj = new $class();
+
+  SAFE:
+    // Use a hardcoded switch statement or allowlist map.

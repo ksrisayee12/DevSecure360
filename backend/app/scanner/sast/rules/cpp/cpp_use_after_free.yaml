@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/416.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Accessing a pointer after it has been freed leads to undefined behavior and potential RCE. Rule is Tentative.
+
+rule_id: cpp_use_after_free
+language: cpp
+vuln_class: Use After Free
+severity: High
+cwe: CWE-416
+owasp: A04:2021-Insecure Design
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Use After Free (UAF) via delete operator
+message: |-
+  Continuing to use a raw pointer after calling `delete` on it leads to Use After Free (UAF) vulnerabilities, which can result in code execution.
+sources: []
+sinks:
+- delete ptr
+- delete[]
+sanitizers:
+- ptr = nullptr
+remediation: |-
+  Set the pointer to `nullptr` immediately after `delete`. Prefer using C++ smart pointers (std::unique_ptr, std::shared_ptr) which automatically manage memory lifecycles. Always review your code and apply strict validation. Consult secure coding best practices.

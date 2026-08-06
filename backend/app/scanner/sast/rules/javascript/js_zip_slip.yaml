@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: js_zip_slip
+language: javascript
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via adm-zip, unzipper, or yauzl without entry path
+  validation
+message: |-
+  The Node.js application extracts ZIP archive entries without validating that each entry's fileName remains within the intended extraction directory. An attacker who controls the uploaded ZIP can include entries with ../ path traversal sequences to write files outside the target directory, potentially placing a .env, reverse shell, or server-side script anywhere.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+sinks:
+- entry.fileName
+- .extractAllTo(
+- .pipe(
+- createWriteStream(
+sanitizers:
+- path.resolve(
+- path.normalize(
+- startsWith(outputPath
+remediation: |-
+  Validate each archive entry's resolved path against the extraction root before writing.
+
+  UNSAFE:
+    zip.extractAllTo(outputDir);  /* no path validation */
+
+  SAFE:
+    zip.getEntries().forEach(entry => {
+      const dest = path.resolve(outputDir, entry.entryName);
+      if (!dest.startsWith(path.resolve(outputDir) + path.sep)) {
+        throw new Error('Zip Slip detected: ' + entry.entryName);
+      }
+      zip.extractEntryTo(entry, outputDir);
+    });
+
+  See Snyk Zip Slip Vulnerability research and OWASP File Upload Cheat Sheet.

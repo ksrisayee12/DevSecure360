@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — pattern-based rule
+# Semgrep Source:  https://semgrep.dev/r/python.flask.security.cors-wildcard.cors-wildcard
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Origin_Resource_Sharing_Cheat_Sheet.html
+# Verification:    flask_cors.CORS with origins='*' enables globally permissive cross-origin requests.
+
+rule_id: python_cors_misconfiguration
+language: python
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.4
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Permissive Cross-Origin Resource Sharing (CORS)
+message: |-
+  The application configures CORS to allow requests from any origin ('*') along with credentials. This allows malicious sites to read sensitive data across origins.
+sources: []
+sinks:
+- CORS(app, origins="*")
+- 'CORS(app, resources={r"/*": {"origins": "*"}})'
+- flask_cors.CORS(
+sanitizers: []
+remediation: |-
+  Configure CORS to only allow trusted domains, never use the wildcard '*' origin when credentials are required.
+
+  UNSAFE:
+    CORS(app, origins='*')
+
+  SAFE:
+    CORS(app, origins=['https://trusted.example.com'])

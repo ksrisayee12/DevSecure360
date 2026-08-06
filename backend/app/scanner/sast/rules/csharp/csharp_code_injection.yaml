@@ -1,0 +1,41 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not explicitly covered by default rules but a well-known .NET sink
+# Semgrep Source:  https://semgrep.dev/r/csharp.lang.security.injection.dynamic-code-execution
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    CSharpCodeProvider allows direct compilation and execution of provided source strings.
+
+rule_id: csharp_code_injection
+language: csharp
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via CSharpCodeProvider
+message: |-
+  User input is compiled and executed dynamically at runtime. This allows an attacker to achieve full Remote Code Execution.
+sources:
+- Request.QueryString[
+- Request.Form[
+- Request.Cookies[
+- Request.Headers[
+- Request.Params[
+- Request.Item[
+- HttpContext.Request.Query[
+- HttpContext.Request.Form[
+- Environment.GetEnvironmentVariable(
+- Environment.GetCommandLineArgs(
+sinks:
+- CSharpCodeProvider().CompileAssemblyFromSource(
+sanitizers: []
+remediation: |-
+  Avoid compiling and executing dynamic code containing user input. If scripting is required, use a heavily sandboxed environment or safe interpreter.
+
+  UNSAFE:
+    new CSharpCodeProvider().CompileAssemblyFromSource(parameters, input);
+
+  SAFE:
+    // Do not compile untrusted strings

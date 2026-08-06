@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    pg_query, mysql_query, mssql_query verified from official php.net documentation.
+
+rule_id: php_sqli_mysql_legacy
+language: php
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via deprecated PHP mysql_query() with concatenated user input
+message: |-
+  The application uses the deprecated mysql_* extension with user input concatenated into the SQL query string. The mysql extension was removed in PHP 7.0 but may exist in legacy codebases. It does not support native parameterized queries, and mysql_real_escape_string() is insufficient against all injection variants. An attacker can extract, modify, or delete all database data.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- mysql_query(
+- mysql_db_query(
+sanitizers:
+- mysql_real_escape_string(
+remediation: |-
+  Replace the deprecated mysql_* extension with PDO or MySQLi prepared statements.
+
+  UNSAFE:
+    $result = mysql_query("SELECT * FROM users WHERE id = " . $_GET["id"]);
+
+  SAFE (PDO):
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$_GET["id"]]);
+
+  The mysql_ extension is removed in PHP 7+. Migration to PDO is mandatory. See OWASP SQL Injection Prevention Cheat Sheet.

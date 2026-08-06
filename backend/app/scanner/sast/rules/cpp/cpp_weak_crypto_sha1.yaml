@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/327.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+crypto
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    MD5 and SHA-1 are cryptographically broken and should not be used for security purposes.
+
+rule_id: cpp_weak_crypto_sha1
+language: cpp
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-327
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: 'Weak Cryptography: Usage of SHA-1'
+message: |-
+  SHA-1 is cryptographically weak and vulnerable to collision attacks (e.g., SHAttered). It must not be used for security purposes like password hashing or digital signatures.
+sources: []
+sinks:
+- SHA1_Init(
+- SHA1(
+sanitizers:
+- SHA256(
+- SHA3_
+remediation: |-
+  Replace SHA-1 with a secure algorithm like SHA-256 or SHA-3 for hashing data. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

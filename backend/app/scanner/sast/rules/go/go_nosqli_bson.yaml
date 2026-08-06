@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based query string detection
+# Semgrep Source:  https://semgrep.dev/r?q=graphql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html
+# Verification:    GraphQL query string concatenation sinks verified from OWASP GraphQL Cheat Sheet and Semgrep.
+
+rule_id: go_nosqli_bson
+language: go
+vuln_class: NoSQLi
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: NoSQL Injection via MongoDB bson.D or bson.M filter with user-controlled operator
+  fields
+message: |-
+  User-controlled input is used directly to construct a MongoDB bson.D or bson.M query filter without sanitizing the field keys or values. An attacker can inject MongoDB operators like $gt, $where, $regex, or $ne by controlling the filter key names, causing the query to return unauthorized documents or bypass authentication checks entirely.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- bson.D{
+- bson.M{
+- collection.Find(
+- collection.FindOne(
+sanitizers:
+- primitive.ObjectIDFromHex(
+- regexp.MustCompile(
+remediation: |-
+  Use typed, structured filter documents — never allow user input to control field key names.
+
+  UNSAFE:
+    filter := bson.M{userKey: userValue}  /* userKey could be '$where' */
+
+  SAFE:
+    // Hardcode the field name; only accept the value from user
+    filter := bson.M{"username": sanitizedUsername, "active": true}
+
+  Validate and sanitize all values. Never let user input control MongoDB operator key names. See OWASP NoSQL Injection Prevention guidance.

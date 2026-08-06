@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   Not applicable — pattern-based log sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=log+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+# Verification:    Unsanitized CRLF characters in logs allow spoofing log entries (Log Forging).
+
+rule_id: go_log_injection_logrus
+language: go
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A09:2021-Security Logging and Monitoring Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Injection via unvalidated input in logging statements
+message: |-
+  Writing user-controlled strings to logs using logrus, zap, or log without stripping newlines enables log forging and log viewing software exploitation.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- log.Printf(
+- logrus.Info(
+sanitizers:
+- strings.ReplaceAll(
+remediation: |-
+  Use structured logging (e.g., logrus.WithField) which natively encodes fields, or strip CRLF characters from unstructured strings. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — structural CORS header detection
+# Semgrep Source:  https://semgrep.dev/r?q=cors+wildcard
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
+# Verification:    CORS wildcard origin with credentials is forbidden by browser spec (RFC 6454). Rule is Tentative.
+
+rule_id: js_cors_wildcard
+language: javascript
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.4
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N
+confidence: Tentative
+issue: 'CORS Misconfiguration: Express middleware setting Access-Control-Allow-Origin
+  to * on authenticated API'
+message: |-
+  The Express.js application uses the cors() middleware with origin: '*' or manually sets the Access-Control-Allow-Origin: * header on routes that handle authenticated user data. Any website can make cross-origin requests to the API and read responses if the client does not send credentials. Combining with reflected origin enables full credential bypass.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- 'cors({ origin: ''*'' })'
+- cors({origin:'*'})
+- '''Access-Control-Allow-Origin'', ''*'''
+sanitizers:
+- allowedOrigins
+- 'origin: function('
+remediation: |-
+  Use an explicit origin allowlist instead of wildcard.
+
+  UNSAFE:
+    app.use(cors({ origin: '*' }));
+    res.header('Access-Control-Allow-Origin', '*');
+
+  SAFE:
+    const allowed = ['https://app.example.com', 'https://admin.example.com'];
+    app.use(cors({
+      origin: (origin, cb) => cb(null, allowed.includes(origin)),
+      credentials: true
+    }));
+
+  See OWASP CORS guide and NPM cors package documentation.

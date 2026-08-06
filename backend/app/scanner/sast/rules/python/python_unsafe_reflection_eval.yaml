@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: python_unsafe_reflection_eval
+language: python
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Code Execution via eval()
+message: |-
+  Passing user input into the built-in eval() function executes it as Python code, resulting in immediate Remote Code Execution.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- eval(
+sanitizers:
+- ast.literal_eval(
+remediation: |-
+  Never use eval() on untrusted data. Use ast.literal_eval() to safely parse strings into Python literals (dictionaries, lists, etc.). Always review your code and apply strict validation. Consult secure coding best practices.

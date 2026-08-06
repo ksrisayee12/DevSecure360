@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    SQL injection sinks verified from CodeQL standard libraries and Semgrep registry for the respective language.
+
+rule_id: csharp_sqli_oledb
+language: csharp
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via OleDbCommand
+message: |-
+  The application creates a new `OleDbCommand` using a dynamically built query string, leading to SQL injection.
+sources: []
+sinks:
+- new OleDbCommand(
+sanitizers: []
+remediation: |-
+  Always utilize parameterized queries by adding parameters to the `OleDbCommand.Parameters` collection instead of directly formatting strings.

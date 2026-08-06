@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/362.html
+# CodeQL Source:   Not applicable — CFG-based concurrent access detection
+# Semgrep Source:  Not applicable — structural pattern detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html
+# Verification:    Race condition patterns (TOCTOU, concurrent access) are CFG-based heuristics. Rule is Tentative.
+
+rule_id: c_race_condition
+language: c
+vuln_class: Race Condition
+severity: High
+cwe: CWE-362
+owasp: A04:2021-Insecure Design
+cvss_score: 7.0
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Race Condition (TOC/TOU) in File Operations
+message: |-
+  The application checks the state of a file (e.g., access, stat) before operating on it (e.g., open). Attackers can replace the file between the check and the use, leading to privilege escalation.
+sources:
+- gets(
+- fgets(
+- scanf(
+- fscanf(
+- sscanf(
+- read(
+- recv(
+- recvfrom(
+- getenv(
+- argv[
+sinks:
+- access(
+- stat(
+- lstat(
+sanitizers:
+- fstat(
+remediation: |-
+  Avoid Time-of-Check Time-of-Use (TOCTOU) race conditions by opening the file first and using fstat() on the file descriptor instead of stat() on the filename.

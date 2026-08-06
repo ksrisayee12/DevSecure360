@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: java_zip_slip
+language: java
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via ZipInputStream entry.getName() without path validation
+message: |-
+  The application extracts a ZIP archive using ZipInputStream without validating each entry's getName() path against the intended destination directory. An attacker-controlled ZIP file can contain entries with ../ traversal sequences that escape the target directory, writing arbitrary files to the server filesystem, including web-accessible directories.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- zipEntry.getName(
+- new ZipInputStream(
+- getNextEntry(
+sanitizers:
+- getCanonicalPath(
+- .startsWith(destDir
+remediation: |-
+  Validate each entry's canonical path against the target directory before extracting.
+
+  UNSAFE:
+    ZipEntry entry = zis.getNextEntry();
+    new FileOutputStream(destDir + entry.getName());  /* no path check */
+
+  SAFE:
+    ZipEntry entry = zis.getNextEntry();
+    File destFile = new File(destDir, entry.getName());
+    if (!destFile.getCanonicalPath().startsWith(new File(destDir).getCanonicalPath()))
+        throw new SecurityException("Zip Slip detected: " + entry.getName());
+    new FileOutputStream(destFile);
+
+  See Snyk Zip Slip research and OWASP File Upload Cheat Sheet for Java examples.

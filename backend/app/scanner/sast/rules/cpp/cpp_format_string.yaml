@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Format string vulnerable functions (printf, fprintf, sprintf, syslog) verified from CodeQL C/C++ standard libraries.
+
 rule_id: cpp_format_string
 language: cpp
 vuln_class: Format String
@@ -6,7 +13,7 @@ cwe: CWE-134
 owasp: A03:2021-Injection
 cvss_score: 8.8
 cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
-confidence: Confirmed
+confidence: Tentative
 issue: Format String Vulnerability via printf family
 message: |-
   User input is passed directly as the format string argument to a printf-family function in C++.

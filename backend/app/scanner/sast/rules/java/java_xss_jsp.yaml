@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/79.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/XSS.qll
+# Semgrep Source:  https://semgrep.dev/r?q=xss+java+jsp
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+# Verification:    JSP out.println and PrintWriter.print sinks verified from CodeQL Java XSS standard libraries.
+
+rule_id: java_xss_jsp
+language: java
+vuln_class: XSS
+severity: High
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: Cross-Site Scripting via JSP out.println() with unencoded user-supplied input
+message: |-
+  User-controlled request data is written to the HTTP response via JSP implicit out.println() or response.getWriter().print() without HTML encoding. An attacker can inject JavaScript into the page to steal session cookies, redirect users, log keystrokes, or perform authenticated actions on behalf of the victim user.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- out.println(
+- out.print(
+- response.getWriter().print(
+- response.getWriter().println(
+- response.getWriter().write(
+sanitizers:
+- ESAPI.encoder().encodeForHTML(
+- HtmlUtils.htmlEscape(
+- Encode.forHtml(
+remediation: |-
+  HTML-encode all user-controlled data before writing to HTTP responses.
+
+  UNSAFE:
+    out.println("<p>Hello " + request.getParameter("name") + "</p>");
+
+  SAFE:
+    import org.owasp.encoder.Encode;
+    out.println("<p>Hello " + Encode.forHtml(request.getParameter("name")) + "</p>");
+
+  Prefer JSP JSTL <c:out value="${name}"/> which auto-escapes HTML. See OWASP XSS Prevention Cheat Sheet.

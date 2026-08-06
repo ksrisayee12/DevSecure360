@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/916.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=pbkdf2+weak+iterations
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+# Verification:    NIST SP 800-132 recommends >=310,000 PBKDF2-SHA256 iterations as of 2023.
+
+rule_id: python_weak_pbkdf2
+language: python
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-916
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak password hashing via hashlib.pbkdf2_hmac() with iteration count below
+  NIST SP 800-132 minimum
+message: |-
+  The application calls hashlib.pbkdf2_hmac() with an iteration count below 310,000 (NIST SP 800-132 2023 recommendation for PBKDF2-SHA256). GPU-accelerated cracking tools like Hashcat can test billions of PBKDF2 iterations per second. A hash with 10,000 iterations is 31x weaker than the current minimum, making common passwords crackable in minutes after a database breach.
+sources: []
+sinks:
+- hashlib.pbkdf2_hmac(
+- pbkdf2_hmac('sha
+sanitizers:
+- argon2
+- bcrypt.hashpw(
+remediation: |-
+  Use argon2-cffi or bcrypt for password hashing. If PBKDF2 is required, use >= 310,000 iterations.
+
+  UNSAFE:
+    hashlib.pbkdf2_hmac('sha256', password, salt, 10000)
+
+  SAFE (PBKDF2):
+    hashlib.pbkdf2_hmac('sha256', password, salt, 310000)
+
+  BETTER (Argon2id):
+    from argon2 import PasswordHasher
+    ph = PasswordHasher()
+    hash = ph.hash(password)
+
+  See NIST SP 800-132, OWASP Password Storage Cheat Sheet, and argon2-cffi documentation.

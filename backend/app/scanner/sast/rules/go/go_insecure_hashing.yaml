@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/328.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/go/semmle/go/security/crypto/WeakHashing.qll
+# Semgrep Source:  https://semgrep.dev/r/go.lang.security.audit.crypto.weak-hash
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    crypto/md5 and crypto/sha1 are explicitly documented as cryptographically broken.
+
+rule_id: go_insecure_hashing
+language: go
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-328
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Insecure Hashing Algorithm (CWE-328)
+message: |-
+  The application uses a broken or weak cryptographic hashing algorithm such as MD5 or SHA1. These algorithms are vulnerable to collision attacks.
+sources: []
+sinks:
+- md5.New()
+- sha1.New()
+- crypto.MD5
+- crypto.SHA1
+sanitizers: []
+remediation: |-
+  Use strong hashing algorithms like SHA-256, SHA-3, or bcrypt for passwords.
+
+  UNSAFE:
+    h := md5.New()
+
+  SAFE:
+    h := sha256.New()

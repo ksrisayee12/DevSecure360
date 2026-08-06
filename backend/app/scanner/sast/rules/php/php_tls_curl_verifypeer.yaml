@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/295.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=certificate+validation
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    Disabling TLS certificate validation allows Man-in-the-Middle (MitM) attacks. Tentative.
+
+rule_id: php_tls_curl_verifypeer
+language: php
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-295
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Improper TLS Validation: CURLOPT_SSL_VERIFYPEER set to false'
+message: |-
+  Setting CURLOPT_SSL_VERIFYPEER to false disables cryptographic validation of the TLS certificate chain in PHP cURL requests, breaking transport layer security.
+sources: []
+sinks:
+- CURLOPT_SSL_VERIFYPEER, 0
+- CURLOPT_SSL_VERIFYPEER, false
+sanitizers:
+- CURLOPT_SSL_VERIFYPEER, true
+remediation: |-
+  Always set CURLOPT_SSL_VERIFYPEER to true. Configure CURLOPT_CAINFO if using custom roots. Always review your code and apply strict validation. Consult secure coding best practices.

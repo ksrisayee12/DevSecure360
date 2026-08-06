@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1236.html
+# CodeQL Source:   Not applicable — pattern-based formula character detection
+# Semgrep Source:  https://semgrep.dev/r?q=csv+injection
+# OWASP Cheat:     https://owasp.org/www-community/attacks/CSV_Injection
+# Verification:    CSV formula injection (=,+,@,-) detected as pattern-based code injection. Rule is Tentative.
+
+rule_id: php_csv_injection
+language: php
+vuln_class: Code Injection
+severity: High
+cwe: CWE-1236
+owasp: A03:2021-Injection
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: 'CSV Formula Injection: user data with =,+,@,- prefix written via fputcsv()
+  without sanitation'
+message: |-
+  User-supplied data starting with formula trigger characters (=, +, @, -, |) is written to a CSV file using fputcsv() without sanitization. When downloaded and opened in Microsoft Excel, LibreOffice Calc, or Google Sheets, the cell is executed as a formula. Attackers can exfiltrate data to external servers via =HYPERLINK() or trigger DDE command execution.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- fputcsv(
+- fputs($file
+- fwrite($fp
+sanitizers:
+- sanitizeCsv(
+remediation: |-
+  Sanitize field values before CSV output to prevent formula injection.
+
+  UNSAFE:
+    fputcsv($handle, [$userInput]);
+
+  SAFE:
+    function sanitizeCsvField($val) {
+        $val = (string)$val;
+        if (strlen($val) > 0 && in_array($val[0], ['=','+','-','@','|','%'])) {
+            return "'" . $val;
+        }
+        return $val;
+    }
+    fputcsv($handle, [sanitizeCsvField($userInput)]);
+
+  See OWASP CSV Injection defense and MITRE CWE-1236.

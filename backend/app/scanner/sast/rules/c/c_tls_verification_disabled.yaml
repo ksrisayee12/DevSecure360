@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/295.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=certificate+validation
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    Disabling TLS certificate validation allows Man-in-the-Middle (MitM) attacks. Tentative.
+
+rule_id: c_tls_verification_disabled
+language: c
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-295
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Improper TLS Certificate Validation in libcurl
+message: |-
+  Setting CURLOPT_SSL_VERIFYPEER to 0 (false) disables TLS certificate validation in libcurl, allowing attackers to intercept and modify traffic via Man-in-the-Middle (MitM) attacks.
+sources: []
+sinks:
+- CURLOPT_SSL_VERIFYPEER, 0L
+- CURLOPT_SSL_VERIFYPEER, 0
+sanitizers:
+- CURLOPT_SSL_VERIFYPEER, 1L
+remediation: |-
+  Do not disable SSL verification in production environments. Ensure CURLOPT_SSL_VERIFYPEER is set to 1L (the default). Always review your code and apply strict validation. Consult secure coding best practices.

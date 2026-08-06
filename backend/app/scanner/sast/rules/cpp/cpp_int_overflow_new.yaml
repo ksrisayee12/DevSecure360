@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based pattern detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Integer overflow before memory allocation verified from CodeQL C/C++ standard libraries. Rule is Tentative.
+
+rule_id: cpp_int_overflow_new
+language: cpp
+vuln_class: Integer Overflow
+severity: Critical
+cwe: CWE-190
+owasp: A03:2021-Injection
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Tentative
+issue: Integer Overflow in Array Allocation
+message: |-
+  The application uses an unchecked user-supplied integer to size an array allocation via 'new T[size]'. An overflow can lead to undersized allocation and heap corruption.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- 'new '
+sanitizers: []
+remediation: |-
+  Validate bounds and constraints on allocation sizes before using the 'new' operator, or prefer std::vector which handles sizing safely.

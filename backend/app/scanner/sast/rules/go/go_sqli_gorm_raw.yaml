@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    SQL injection sinks verified from CodeQL standard libraries and Semgrep registry for the respective language.
+
+rule_id: go_sqli_gorm_raw
+language: go
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via gorm Raw/Where
+message: |-
+  The application uses GORM's `Raw()` or `Where()` methods with format strings or concatenation to inject user data, rendering ORM protections ineffective.
+sources: []
+sinks:
+- gorm.DB.Raw(
+- gorm.DB.Where(
+sanitizers: []
+remediation: |-
+  Pass user input as additional arguments to `Raw()` or `Where()` to utilize GORM's built-in parameter binding.

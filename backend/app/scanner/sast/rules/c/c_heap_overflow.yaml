@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/122.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=heap+overflow
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Heap overflow via malloc+memcpy without bounds verified from CodeQL C/C++ standard libraries.
+
+rule_id: c_heap_overflow
+language: c
+vuln_class: Buffer Overflow
+severity: High
+cwe: CWE-122
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: 'Heap buffer overflow: malloc allocated with user-controlled size then written
+  past bounds'
+message: |-
+  A buffer is allocated with malloc() using a size derived from user-controlled input without overflow validation. A subsequent memcpy() or write operation copies more data than fits in the allocated region. Heap overflows corrupt adjacent heap chunks, enabling attackers to overwrite function pointers, GOT entries, or other heap metadata to gain code execution.
+sources: []
+sinks:
+- malloc(
+- calloc(
+- realloc(
+sanitizers:
+- size_t overflow check
+- SAFE_MALLOC
+remediation: |-
+  Validate size parameters for arithmetic overflow before passing to malloc, and bounds-check writes.
+
+  UNSAFE:
+    size_t size = user_len * sizeof(int);  /* may overflow */
+    int *buf = malloc(size);
+    memcpy(buf, src, user_len * sizeof(int));  /* no bounds check */
+
+  SAFE:
+    if (user_len > SIZE_MAX / sizeof(int)) return ERROR;
+    size_t size = user_len * sizeof(int);
+    int *buf = malloc(size);
+    if (!buf) return ERROR;
+    memcpy(buf, src, size);
+
+  Use reallocarray() which checks overflow. See CERT MEM35-C.

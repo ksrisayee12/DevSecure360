@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/327.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+crypto
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    DES, 3DES, and RC4 are cryptographically broken algorithms.
+
+rule_id: java_weak_crypto_des
+language: java
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-327
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: 'Weak Cryptography: Usage of DES or RC4'
+message: |-
+  Instantiating a Cipher with 'DES', 'DESede' (3DES), or 'RC4' uses algorithms that are no longer considered secure against modern cryptanalysis.
+sources: []
+sinks:
+- Cipher.getInstance("DES"
+- Cipher.getInstance("RC4"
+sanitizers:
+- Cipher.getInstance("AES/GCM/NoPadding")
+remediation: |-
+  Replace legacy ciphers with AES/GCM/NoPadding for strong authenticated encryption. Always ensure input validation and consult language-specific security documentation.

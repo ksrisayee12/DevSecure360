@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based template sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=server+side+template+injection
+# OWASP Cheat:     https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+# Verification:    Template engine sinks (FreeMarker, Velocity, Mako, Twig, Razor) verified from engine docs.
+
+rule_id: csharp_ssti_razorengine
+language: csharp
+vuln_class: SSTI
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SSTI via RazorEngine.Compile() or Run() with user-controlled Razor template
+  string
+message: |-
+  User-controlled input is passed as the Razor template string to RazorEngine.Compile(), RazorEngine.Run(), or Engine.Razor.RunCompile(). Razor templates can contain arbitrary C# code. An attacker can inject @{ System.Diagnostics.Process.Start("cmd", "/c whoami"); } to execute arbitrary OS commands with the application's process privileges.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- Request.Body
+- HttpContext.Request
+sinks:
+- Engine.Razor.Run(
+- Engine.Razor.RunCompile(
+- RazorEngine.Run(
+- RazorEngine.Compile(
+sanitizers:
+- allowlist
+- sandboxed
+remediation: |-
+  Never evaluate user-controlled strings as Razor templates. Use pre-compiled, server-defined templates.
+
+  UNSAFE:
+    string template = Request.Query["template"];
+    Engine.Razor.RunCompile(template, "key", null, model);
+
+  SAFE:
+    // Load templates only from server-controlled files
+    string template = File.ReadAllText("views/safe-template.cshtml");
+    Engine.Razor.RunCompile(template, "key", null, model);
+
+  Pass user data as model variables only, never as template source. See CVE-2020-14966 and OWASP SSTI testing guide.

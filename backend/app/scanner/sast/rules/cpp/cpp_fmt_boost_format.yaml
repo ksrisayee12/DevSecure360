@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Format string vulnerable functions (printf, fprintf, sprintf, syslog) verified from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_fmt_boost_format
+language: cpp
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:H
+confidence: Tentative
+issue: Format String Vulnerability in boost::format
+message: |-
+  The application passes untrusted input directly to boost::format(), which can trigger exceptions or unexpected formatting logic.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- boost::format(
+sanitizers: []
+remediation: |-
+  Use a hardcoded string literal for the format specifier and pass untrusted data securely via the formatting arguments (e.g., the '%' operator).

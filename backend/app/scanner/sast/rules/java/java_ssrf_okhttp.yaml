@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input passed to HTTP client libraries allows Server-Side Request Forgery.
+
+rule_id: java_ssrf_okhttp
+language: java
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via OkHttp Client
+message: |-
+  Passing unvalidated user input as the URL to an OkHttpClient Request.Builder allows an attacker to initiate Server-Side Request Forgery against internal infrastructure.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new Request.Builder().url(
+- client.newCall(
+sanitizers:
+- HttpUrl.parse
+remediation: |-
+  Parse the URL and validate that the host matches a restricted allowlist. Ensure it does not point to private IP ranges. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

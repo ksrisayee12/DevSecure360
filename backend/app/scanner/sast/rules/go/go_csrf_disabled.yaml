@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/352.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=csrf+disabled
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Disabling CSRF protection on web endpoints is a major risk. Rule is Tentative.
+
+rule_id: go_csrf_disabled
+language: go
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-352
+owasp: A01:2021-Broken Access Control
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N
+confidence: Tentative
+issue: CSRF Protection Disabled or Missing in Go web framework
+message: |-
+  Failing to implement CSRF protection (e.g., anti-CSRF tokens, SameSite cookies) allows attackers to forge requests on behalf of authenticated users via malicious sites.
+sources: []
+sinks:
+- http.ListenAndServe(
+sanitizers:
+- csrf.Protect(
+- SameSite
+remediation: |-
+  Use a middleware like gorilla/csrf to implement anti-CSRF tokens for all state-changing requests. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

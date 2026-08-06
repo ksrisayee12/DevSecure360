@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based user-controlled regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos+user+controlled+regex
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    User-controlled Pattern.compile / re.compile with no allowlist verified. Rule is Tentative.
+
+rule_id: python_regex_user_pattern
+language: python
+vuln_class: ReDoS
+severity: High
+cwe: CWE-1333
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: ReDoS via re.compile() with user-controlled regex pattern — catastrophic backtracking
+message: |-
+  User-controlled input is passed directly as the regex pattern argument to re.compile() or re.match(). An attacker can supply a catastrophically backtracking pattern like (a+)+ or (.*a){32} combined with a non-matching input string, causing the Python regex engine to run exponentially and hang the process, causing denial of service.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- re.compile(request
+- re.match(user
+- re.search(user
+- re.compile(form
+sanitizers:
+- re.escape(
+- allowlist_pattern
+remediation: |-
+  Never allow user input to be the regex pattern. Use hardcoded patterns or validate against a strict allowlist.
+
+  UNSAFE:
+    pattern = re.compile(request.args.get('pattern'))  /* attacker controls pattern */
+
+  SAFE:
+    # Hardcode the pattern; user only provides the subject string
+    SAFE_PATTERN = re.compile(r'^[a-zA-Z0-9_]+$')
+    if SAFE_PATTERN.match(request.args.get('input')): ...
+
+  If user-defined patterns are required, use re.escape() on the input and wrap in a safe container pattern. Set timeout via threading. See OWASP ReDoS prevention guide.

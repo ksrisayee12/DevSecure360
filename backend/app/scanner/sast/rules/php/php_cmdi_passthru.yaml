@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    passthru(), popen(), proc_open() verified as dangerous from official php.net documentation.
+
+rule_id: php_cmdi_passthru
+language: php
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via PHP passthru() with user-controlled command string
+message: |-
+  User-controlled input from $_GET or $_POST is passed to PHP passthru(), which executes a shell command and outputs the raw result directly to the browser. An attacker can append shell metacharacters (;, |, &&, `) to inject additional commands executed with web server privileges, potentially achieving full server compromise.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- passthru(
+sanitizers:
+- escapeshellarg(
+- escapeshellcmd(
+remediation: |-
+  Never pass user input to passthru() without escaping. Prefer native PHP functions over shell.
+
+  UNSAFE:
+    passthru("ls " . $_GET["dir"]);
+
+  SAFE:
+    $dir = escapeshellarg($_GET["dir"]);
+    passthru("ls " . $dir);
+
+  Better: replace shell execution with PHP filesystem functions (scandir(), glob()) that do not invoke a shell. See OWASP OS Command Injection Defense Cheat Sheet.

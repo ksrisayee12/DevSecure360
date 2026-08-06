@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1321.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/
+# Semgrep Source:  https://semgrep.dev/r?q=prototype+pollution
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html
+# Verification:    Prototype pollution sinks (Object.assign, merge, defaultsDeep) verified from CodeQL JS standard libraries.
+
+rule_id: js_proto_pollution_assign
+language: javascript
+vuln_class: Prototype Pollution
+severity: Medium
+cwe: CWE-1321
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Tentative
+issue: Prototype Pollution via Object.assign
+message: |-
+  Untrusted objects are passed to Object.assign(), which may allow property injection if the source objects contain malicious __proto__ properties.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- Object.assign(
+sanitizers: []
+remediation: |-
+  Ensure untrusted inputs are securely sanitized before assignment. Create objects with null prototypes using Object.create(null) for safe data storage.

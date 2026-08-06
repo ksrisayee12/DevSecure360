@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    ReDoS detection is pattern-based on catastrophic backtracking regex literals. Rule is Tentative.
+
+rule_id: java_redos_pattern
+language: java
+vuln_class: ReDoS
+severity: Medium
+cwe: CWE-1333
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Tentative
+issue: ReDoS via java.util.regex.Pattern
+message: |-
+  Compiling regular expressions from untrusted input or evaluating complex static regexes against long malicious strings can cause catastrophic backtracking in Java's Regex engine.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- Pattern.compile(
+- matcher.matches(
+sanitizers:
+- RE2J
+remediation: |-
+  Avoid complex regex structures with nested quantifiers. Limit the input length strictly, or use the RE2J library which guarantees linear-time execution. Always ensure input validation and consult language-specific security documentation.

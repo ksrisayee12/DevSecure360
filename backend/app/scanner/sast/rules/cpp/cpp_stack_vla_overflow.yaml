@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/122.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=heap+overflow
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Heap overflow via malloc+memcpy without bounds verified from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_stack_vla_overflow
+language: cpp
+vuln_class: Buffer Overflow
+severity: High
+cwe: CWE-121
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Stack buffer overflow via Variable-Length Array (VLA) with unchecked user-controlled
+  size
+message: |-
+  A Variable-Length Array is declared on the stack with a size derived from user-controlled input without a maximum-size check. An attacker providing an extremely large size causes a stack overflow by allocating more stack space than available. This overwrites the return address or frame pointers, potentially enabling code execution via ROP or ret2libc.
+sources: []
+sinks:
+- char buf[n]
+- int arr[n]
+- alloca(
+sanitizers:
+- MAX_SIZE
+- < MAX
+remediation: |-
+  Replace VLAs with statically sized arrays or heap allocation with bounds checking.
+
+  UNSAFE:
+    void process(size_t n) {
+        char buf[n];  /* VLA — no upper bound check */
+    }
+
+  SAFE:
+    void process(size_t n) {
+        if (n > MAX_BUF_SIZE) return;  /* bounds check first */
+        char *buf = malloc(n);          /* heap instead of stack */
+    }
+
+  VLAs were made optional in C11 and C++14 removed them. Enable -Wvla. See CERT ARR32-C.

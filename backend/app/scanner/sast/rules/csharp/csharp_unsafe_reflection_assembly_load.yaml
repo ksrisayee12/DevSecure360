@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: csharp_unsafe_reflection_assembly_load
+language: csharp
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Assembly Loading via Assembly.Load()
+message: |-
+  Loading assemblies dynamically based on user input allows an attacker to load malicious code into the application domain, leading to RCE.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Assembly.Load(
+- Assembly.LoadFile(
+sanitizers:
+- allowlist
+remediation: |-
+  Restrict assembly loading to a fixed list of known, signed assemblies. Always review your code and apply strict validation. Consult secure coding best practices.

@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Deserialization sinks verified from CodeQL standard libraries and OWASP Deserialization Cheat Sheet.
+
+rule_id: csharp_deser_xmlserializer
+language: csharp
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Insecure Deserialization via XmlSerializer
+message: |-
+  The application uses `XmlSerializer` to deserialize XML data while allowing arbitrary types to be loaded, posing a risk of insecure deserialization.
+sources: []
+sinks:
+- XmlSerializer.Deserialize(
+sanitizers: []
+remediation: |-
+  Avoid resolving arbitrary types during XML deserialization. Use strongly-typed wrapper classes and restrict resolving external XML entities.

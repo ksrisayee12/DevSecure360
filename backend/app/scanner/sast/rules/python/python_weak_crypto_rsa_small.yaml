@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/327.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=weak+crypto
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Weak cryptographic function calls verified from CodeQL standard libraries and NIST recommendations.
+
+rule_id: python_weak_crypto_rsa_small
+language: python
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-326
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Inadequate RSA Key Size
+message: |-
+  The application generates RSA keys with insufficient sizes (e.g., 512 or 1024 bits), which can be factored by well-resourced attackers.
+sources: []
+sinks:
+- RSA.generate(512)
+- RSA.generate(1024)
+sanitizers: []
+remediation: |-
+  Use an RSA key size of at least 2048 bits. 3072 or 4096 bits are recommended for long-term security.

@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — structural CORS header detection
+# Semgrep Source:  https://semgrep.dev/r?q=cors+wildcard
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
+# Verification:    CORS wildcard origin with credentials is forbidden by browser spec (RFC 6454). Rule is Tentative.
+
+rule_id: python_cors_wildcard
+language: python
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.4
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N
+confidence: Tentative
+issue: 'CORS Misconfiguration: Flask-CORS or Django-CORS configured with wildcard
+  origin on authenticated API'
+message: |-
+  The Python web application configures CORS with origins='*' or CORS_ALLOW_ALL_ORIGINS=True on API endpoints that handle authenticated user data. Cross-origin requests from any website can read API responses. If the origin is reflected back from the request without validation, attackers can bypass intended domain restrictions and steal user data via CSRF-like attacks.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- CORS(app, resources
+- CORS_ALLOW_ALL_ORIGINS = True
+- origins='*'
+- origins="*"
+sanitizers:
+- CORS_ALLOWED_ORIGINS
+- allowed_origins
+remediation: |-
+  Specify explicit allowed origins. Never use wildcard on authenticated endpoints.
+
+  UNSAFE:
+    from flask_cors import CORS
+    CORS(app, resources={r'/api/*': {'origins': '*'}})
+
+  SAFE:
+    CORS(app, resources={r'/api/*': {
+        'origins': ['https://app.example.com', 'https://admin.example.com'],
+        'supports_credentials': True
+    }})
+
+  See Flask-CORS documentation and OWASP CORS configuration guidance.

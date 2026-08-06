@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=nosql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    NoSQL injection sinks verified from Semgrep registry and official database driver documentation.
+
+rule_id: js_nosqli_mongodb
+language: javascript
+vuln_class: NoSQLi
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.2
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: NoSQL Injection in MongoDB Native Driver
+message: |-
+  User input is directly injected into MongoDB native driver queries, potentially allowing attackers to modify query logic or extract data via operators like $ne or $regex.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- collection.find(
+sanitizers: []
+remediation: |-
+  Sanitize all user input keys to prevent operator injection (e.g., removing keys starting with $) and enforce strict schema validation.

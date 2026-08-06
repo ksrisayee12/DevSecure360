@@ -1,0 +1,37 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/16.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=session+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Insecure session configuration patterns verified from OWASP Session Management Cheat Sheet.
+
+rule_id: java_session_fixation
+language: java
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-384
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: HttpSession not invalidated and regenerated after authentication, enabling
+  session fixation
+message: |-
+  The Java Servlet application does not invalidate the pre-authentication HttpSession and create a new session after a successful login event. An attacker who can obtain a valid pre-login session ID can wait for the victim to authenticate, then use the same session ID to gain authenticated access without ever providing credentials.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Invalidate the old session and create a new one immediately after a successful login.
+
+  UNSAFE:
+    // User authenticates but session ID is not regenerated
+    session.setAttribute("user", username);
+
+  SAFE:
+    HttpSession old = request.getSession(false);
+    if (old != null) { old.invalidate(); }
+    HttpSession newSession = request.getSession(true);
+    newSession.setAttribute("user", username);
+
+  Spring Security handles session fixation protection automatically via SessionFixationProtectionStrategy. Ensure it is not disabled in your configuration.

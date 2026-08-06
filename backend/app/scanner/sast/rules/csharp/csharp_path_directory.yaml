@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Path traversal sinks verified from CodeQL standard libraries and Semgrep registry.
+
+rule_id: csharp_path_directory
+language: csharp
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via Directory Methods
+message: |-
+  The application reads directory contents using `Directory.GetFiles` or `Directory.EnumerateFiles` with user-supplied path data.
+sources: []
+sinks:
+- Directory.GetFiles(
+- Directory.EnumerateFiles(
+sanitizers: []
+remediation: |-
+  Ensure the path resolves to a safe directory by validating its absolute path (`Path.GetFullPath`) against an expected root directory string.

@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input used as a URL to make outgoing HTTP requests enables SSRF.
+
+rule_id: c_ssrf_curl_setopt
+language: c
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via curl_easy_setopt()
+message: |-
+  Using unvalidated user input to set the CURLOPT_URL in libcurl allows an attacker to make unauthorized HTTP requests to internal IP addresses or sensitive cloud metadata endpoints.
+sources: []
+sinks:
+- CURLOPT_URL
+sanitizers:
+- validate_url(
+remediation: |-
+  Verify the host and IP address of the user-provided URL against an allowlist, ensuring it does not resolve to localhost or private network address spaces. Always ensure input validation and consult language-specific security documentation.

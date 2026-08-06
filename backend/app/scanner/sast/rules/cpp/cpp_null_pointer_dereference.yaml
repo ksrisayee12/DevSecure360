@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/476.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Null pointer dereference causes crashes leading to DoS. Rule is Tentative.
+
+rule_id: cpp_null_pointer_dereference
+language: cpp
+vuln_class: Null Pointer Dereference
+severity: Medium
+cwe: CWE-476
+owasp: A04:2021-Insecure Design
+cvss_score: 5.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: Null Pointer Dereference via raw pointers
+message: |-
+  Failing to verify that a raw pointer is not null before dereferencing it (e.g., calling methods or accessing members) leads to immediate segmentation faults.
+sources: []
+sinks:
+- ->
+- '*ptr'
+sanitizers:
+- if (ptr != nullptr)
+- if (ptr)
+remediation: |-
+  Check raw pointers against nullptr before access, or preferably use smart pointers and references which inherently provide better memory safety guarantees. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

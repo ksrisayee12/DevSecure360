@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/RequestForgery.qll
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    RestTemplate and WebClient SSRF sinks verified from CodeQL Java standard libraries.
+
+rule_id: java_ssrf_webclient
+language: java
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Confirmed
+issue: Server-Side Request Forgery via Spring WebClient with user-controlled URI
+message: |-
+  User-controlled input builds the URI passed to Spring WebClient.create() or uri() builder methods. WebClient performs HTTP requests server-side, allowing an attacker to probe internal services, cloud metadata endpoints (AWS IMDSv1 at 169.254.169.254), or internal admin interfaces not exposed to the public network.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- WebClient.create(
+- webClient.get().uri(
+- webClient.post().uri(
+sanitizers:
+- validateUrl(
+- isAllowedDomain(
+remediation: |-
+  Validate and allowlist the URL before using it in a WebClient request.
+
+  UNSAFE:
+    WebClient.create(userUrl).get().retrieve().bodyToMono(String.class);
+
+  SAFE:
+    if (!isPermittedUrl(userUrl)) throw new AccessDeniedException("Blocked URL");
+    WebClient.create(userUrl).get().retrieve().bodyToMono(String.class);
+
+  Block RFC 1918 ranges, loopback, and link-local addresses. See OWASP SSRF Prevention Cheat Sheet.

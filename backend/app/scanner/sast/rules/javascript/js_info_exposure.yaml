@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Information exposure detection is structural, checking for verbose error output patterns. Rule is Tentative.
+
+rule_id: js_info_exposure
+language: javascript
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure through an Error Message
+message: |-
+  The application returns detailed exception stack traces to the user, exposing internal application structure or state.
+sources: []
+sinks:
+- res.send(err.stack)
+- 'res.json({error: err.stack})'
+sanitizers: []
+remediation: |-
+  Log the detailed exception trace internally, but return a generic, safe error message to the user.
+
+  UNSAFE:
+    app.use((err, req, res, next) => res.send(err.stack))
+
+  SAFE:
+    app.use((err, req, res, next) => { console.error(err); res.send('An error occurred'); })

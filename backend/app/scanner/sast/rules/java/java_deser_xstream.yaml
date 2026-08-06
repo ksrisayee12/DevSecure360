@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/Deserialization.qll
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    XStream.fromXML, Yaml.load, ObjectMapper.enableDefaultTyping verified from CodeQL Java libraries.
+
+rule_id: java_deser_xstream
+language: java
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via XStream.fromXML() without class allowlist security
+  configuration
+message: |-
+  User-controlled XML is passed to XStream.fromXML() without configuring a class allowlist. XStream can instantiate arbitrary Java classes during deserialization. An attacker can craft malicious XML triggering gadget chains in common Java libraries (Commons-Collections, Spring) to achieve remote code execution with the full privileges of the application process.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- xstream.fromXML(
+- new XStream().fromXML(
+sanitizers:
+- setupDefaultSecurity(
+- allowTypesByWildcard(
+remediation: |-
+  Configure XStream with an explicit class allowlist before deserializing any untrusted XML.
+
+  UNSAFE:
+    XStream xs = new XStream();
+    Object obj = xs.fromXML(userInput);
+
+  SAFE:
+    XStream xs = new XStream();
+    XStream.setupDefaultSecurity(xs);
+    xs.allowTypesByWildcard(new String[]{ "com.myapp.model.**" });
+    Object obj = xs.fromXML(trustedXml);
+
+  See OWASP Deserialization Cheat Sheet and XStream security documentation for allowlist configuration.

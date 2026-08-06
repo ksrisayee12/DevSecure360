@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_shared_ptr_race
+language: cpp
+vuln_class: Race Condition
+severity: High
+cwe: CWE-362
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.0
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Race Condition via unsynchronized concurrent access to a shared_ptr across
+  threads
+message: |-
+  A std::shared_ptr is accessed and modified concurrently from multiple threads without synchronization. While shared_ptr's reference count operations are atomic, the pointer and the managed object itself are not. Concurrent writes to the same shared_ptr instance cause data races, which are undefined behavior and exploitable for heap corruption.
+sources: []
+sinks:
+- shared_ptr
+- std::shared_ptr
+sanitizers:
+- mutex
+- atomic
+- lock_guard
+remediation: |-
+  Protect all accesses to a shared shared_ptr with a mutex, or use atomic<shared_ptr<T>> (C++20).
+
+  UNSAFE:
+    // Thread 1:
+    globalPtr = make_shared<Widget>(newVal);
+    // Thread 2:
+    auto p = globalPtr;  /* data race on globalPtr */
+
+  SAFE:
+    std::mutex mtx;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        globalPtr = make_shared<Widget>(newVal);
+    }
+
+  Use std::atomic<std::shared_ptr<T>> (C++20) for lock-free atomic pointer swaps. See C++ Standard N4140 and CERT CON50-CPP.

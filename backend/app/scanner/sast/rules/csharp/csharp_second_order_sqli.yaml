@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=second+order+sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    Second-order SQLi via stored data re-used in raw query verified from CodeQL and OWASP testing guides.
+
+rule_id: csharp_second_order_sqli
+language: csharp
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'Second-Order SQL Injection: value from database reader concatenated into raw
+  SQL query'
+message: |-
+  A value read from the database via SqlDataReader.GetString() or similar is concatenated directly into a subsequent SQL query string passed to FromSqlRaw() or ExecuteSqlRaw(). The stored value may contain an injected SQL payload from a prior user request. The second query executes the injection without parameterization, enabling full SQL injection.
+sources:
+- reader.GetString(
+- reader.GetValue(
+- entity.
+- record.
+sinks:
+- FromSqlRaw("
+- ExecuteSqlRaw("
+- cmd.CommandText +=
+- sqlQuery +=
+sanitizers:
+- FromSqlInterpolated($
+- SqlParameter(
+remediation: |-
+  Parameterize ALL queries including those using database-sourced values.
+
+  UNSAFE:
+    string username = reader.GetString(0);
+    ctx.Users.FromSqlRaw("SELECT * FROM logs WHERE user = '" + username + "'");
+
+  SAFE:
+    string username = reader.GetString(0);
+    ctx.Users.FromSqlInterpolated($"SELECT * FROM logs WHERE user = {username}");
+
+  Database-sourced data must be treated as untrusted. See OWASP SQL Injection Prevention Cheat Sheet.

@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/113.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=http+response+splitting
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    HTTP response splitting via unvalidated header values verified from CodeQL and Semgrep registry.
+
+rule_id: csharp_http_response_split
+language: csharp
+vuln_class: XSS
+severity: High
+cwe: CWE-113
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: HTTP Response Splitting via unvalidated user input in Response.Headers.Add()
+message: |-
+  User-controlled input is written directly to an HTTP response header via Response.Headers.Add() or Response.Headers[key] without stripping CR/LF characters. An attacker can inject \r\n to split the HTTP response, injecting malicious headers or a second response body, enabling XSS, cache poisoning, or session fixation.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Response.Headers.Add(
+- Response.Headers[
+- Response.AppendHeader(
+sanitizers:
+- Regex.Replace(
+- Uri.EscapeDataString(
+remediation: |-
+  Strip or reject CR and LF characters from any user-controlled data before setting HTTP headers.
+
+  UNSAFE:
+    Response.Headers.Add("X-User", Request.Query["name"]);
+
+  SAFE:
+    var name = Regex.Replace(Request.Query["name"], @"[\r\n]", "");
+    Response.Headers.Add("X-User", name);
+
+  In ASP.NET Core 5+, Response.Headers.Add() rejects header values with CR/LF by default. Upgrade and do not use workarounds that bypass this protection.

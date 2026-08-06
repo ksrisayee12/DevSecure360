@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based user-controlled regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos+user+controlled+regex
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    User-controlled Pattern.compile / re.compile with no allowlist verified. Rule is Tentative.
+
+rule_id: java_regex_pattern_compile
+language: java
+vuln_class: ReDoS
+severity: High
+cwe: CWE-1333
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Tentative
+issue: ReDoS via Pattern.compile() with user-controlled regex — catastrophic backtracking
+  DoS
+message: |-
+  User-controlled input is passed to java.util.regex.Pattern.compile() as the regex pattern string. An attacker can supply a catastrophically backtracking pattern such as (a+)+ or (\w+\s)* combined with a carefully crafted non-matching input to cause exponential regex evaluation time, hanging the JVM thread and causing denial of service.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+- request.getReader(
+sinks:
+- Pattern.compile(request
+- Pattern.compile(param
+- Pattern.compile(header
+sanitizers:
+- Pattern.compile(SAFE_REGEX
+- allowedPatterns
+remediation: |-
+  Never allow user input to control the regex pattern. Use hardcoded patterns and validate input against them.
+
+  UNSAFE:
+    Pattern p = Pattern.compile(request.getParameter("pattern"));
+    p.matcher(input).matches();
+
+  SAFE:
+    // Hardcode the pattern — user only provides the subject
+    Pattern p = Pattern.compile("^[a-zA-Z0-9_]+$");
+    p.matcher(request.getParameter("input")).matches();
+
+  If user patterns are required, use a regex complexity analyzer or set a timeout via a background thread. See OWASP ReDoS Prevention guide.

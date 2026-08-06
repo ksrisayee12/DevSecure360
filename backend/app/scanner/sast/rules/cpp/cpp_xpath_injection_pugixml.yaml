@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: cpp_xpath_injection_pugixml
+language: cpp
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via pugixml or TinyXML
+message: |-
+  Dynamically formatting an XPath expression string with user input allows an attacker to inject predicates and alter the logical meaning of the query.
+sources: []
+sinks:
+- select_nodes(
+- evaluate_string(
+sanitizers:
+- escape_xpath(
+remediation: |-
+  Validate user input with a strict allowlist before concatenating it into XPath queries. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

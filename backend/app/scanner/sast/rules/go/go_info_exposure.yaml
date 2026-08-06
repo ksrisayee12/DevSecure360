@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Information exposure detection is structural, checking for verbose error output patterns. Rule is Tentative.
+
+rule_id: go_info_exposure
+language: go
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure through Error Messages
+message: |-
+  The application exposes internal implementation details or sensitive configuration data by returning raw error messages directly to the client in HTTP responses.
+sources: []
+sinks:
+- http.Error(w, err.Error()
+- w.Write([]byte(err.Error()))
+sanitizers: []
+remediation: |-
+  Log detailed error messages internally for debugging purposes, but always return generic, safe error messages to end users to prevent the leakage of sensitive internal system state.

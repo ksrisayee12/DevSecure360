@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/119.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — static analysis CFG patterns
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    C++ memory safety patterns (dangling, uninit, reinterpret_cast) from CodeQL C++ standard libraries.
+
+rule_id: cpp_reinterpret_cast_misuse
+language: cpp
+vuln_class: Memory Corruption
+severity: Medium
+cwe: CWE-704
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 6.7
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Memory Corruption via unsafe reinterpret_cast between unrelated pointer types
+  (type punning)
+message: |-
+  A reinterpret_cast is used to convert a pointer of one type directly to an unrelated type without using a union or memcpy, violating strict aliasing rules. The compiler may generate incorrect code because it assumes aliased pointers of different types never point to the same memory. This leads to incorrect reads, corrupted writes, and undefined behavior.
+sources: []
+sinks:
+- reinterpret_cast<
+sanitizers:
+- memcpy(
+- std::bit_cast<
+remediation: |-
+  Use memcpy() or std::bit_cast<> (C++20) for type punning instead of reinterpret_cast.
+
+  UNSAFE:
+    float f = 3.14f;
+    int i = *reinterpret_cast<int*>(&f);  /* strict aliasing violation — UB */
+
+  SAFE (C++20):
+    float f = 3.14f;
+    int i = std::bit_cast<int>(f);  /* defined behavior */
+
+  SAFE (pre-C++20):
+    float f = 3.14f;
+    int i;
+    memcpy(&i, &f, sizeof(i));  /* defined behavior */
+
+  Build with -fstrict-aliasing -Wstrict-aliasing. See GCC aliasing documentation.

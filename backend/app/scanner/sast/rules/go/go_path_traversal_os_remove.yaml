@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Directory traversal in file delete/upload functions allows destructive actions or RCE.
+
+rule_id: go_path_traversal_os_remove
+language: go
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Confirmed
+issue: Arbitrary File Deletion via os.Remove()
+message: |-
+  Constructing file paths with unvalidated user input and passing them to os.Remove() enables directory traversal, allowing the deletion of arbitrary files.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- os.Remove(
+- os.RemoveAll(
+sanitizers:
+- filepath.Base(
+remediation: |-
+  Sanitize the filename with filepath.Base() and ensure the resulting path remains within the intended target directory. Always ensure input validation and consult language-specific security documentation.

@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=dos
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    Recursive entity expansion or unbounded decompression rapidly exhausts memory and CPU.
+
+rule_id: cpp_dos_zip_bomb
+language: cpp
+vuln_class: DoS
+severity: High
+cwe: CWE-400
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Confirmed
+issue: Denial of Service via Unbounded Decompression (Zip Bomb)
+message: |-
+  Decompressing user-supplied zlib or gzip data in C++ without tracking and limiting the output size can exhaust all system memory, causing a Denial of Service.
+sources: []
+sinks:
+- inflate(
+- uncompress(
+sanitizers:
+- output_limit
+remediation: |-
+  Implement strict limits on the maximum allowed decompressed size. Abort the decompression if the output buffer exceeds this threshold. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

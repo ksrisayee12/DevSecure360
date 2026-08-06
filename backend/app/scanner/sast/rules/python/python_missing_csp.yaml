@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: python_missing_csp
+language: python
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing Content-Security-Policy (CSP) header in Flask/Django response
+message: |-
+  The application does not set a Content-Security-Policy response header, leaving users vulnerable to XSS attacks that could execute malicious scripts without browser-level mitigation. Without CSP, a successful XSS injection can steal session tokens, exfiltrate data, or perform actions as the victim.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Add a strict Content-Security-Policy header to all responses using an after_request hook or middleware.
+
+  UNSAFE (Flask): No Content-Security-Policy header configured.
+  SAFE:
+    @app.after_request
+    def add_csp(response):
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        return response
+
+  Use the Flask-Talisman extension to manage all security headers declaratively.

@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/798.html
+# CodeQL Source:   Not applicable — pattern-based literal string detection
+# Semgrep Source:  https://semgrep.dev/r?q=hardcoded+secret
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Hardcoding passwords or database credentials in source code enables complete compromise upon source leak.
+
+rule_id: js_hardcoded_mongodb_uri
+language: javascript
+vuln_class: Hardcoded Secret
+severity: Critical
+cwe: CWE-798
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Hardcoded MongoDB Connection URI
+message: |-
+  A hardcoded MongoDB URI containing a username and password exposes the database to full compromise if the source code is viewed or leaked.
+sources: []
+sinks:
+- '"mongodb+srv://'
+- '''mongodb://'
+sanitizers:
+- process.env.MONGO_URI
+remediation: |-
+  Store database connection URIs securely in `.env` files and access them using `process.env.MONGO_URI`. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

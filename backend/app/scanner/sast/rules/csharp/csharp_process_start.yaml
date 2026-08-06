@@ -1,0 +1,37 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    OS command execution with shell=True or direct string passing allows RCE.
+
+rule_id: csharp_process_start
+language: csharp
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via Process.Start() with cmd.exe and user input
+message: |-
+  Passing user-controlled input to Process.Start("cmd.exe", "/c " + input) enables OS command injection. Attackers can execute arbitrary commands.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Process.Start("cmd.exe"
+- Process.Start("cmd"
+- Process.Start("bash"
+sanitizers:
+- ProcessStartInfo.ArgumentList
+remediation: |-
+  Pass user input as separate arguments, not as part of a shell command string.
+
+  SAFE:
+    var psi = new ProcessStartInfo("mytool.exe");
+    psi.ArgumentList.Add(userInput);
+    Process.Start(psi); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

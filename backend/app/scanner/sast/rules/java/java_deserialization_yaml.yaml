@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Unsafe deserialization (e.g., yaml.load without SafeLoader) allows arbitrary code execution.
+
+rule_id: java_deserialization_yaml
+language: java
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via SnakeYAML
+message: |-
+  Deserializing untrusted YAML data using SnakeYAML's Yaml.load() without a strict Constructor allows arbitrary Java object instantiation, which can lead to RCE.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new Yaml()
+- yaml.load(
+sanitizers:
+- SafeConstructor
+remediation: |-
+  Configure SnakeYAML to use a SafeConstructor, which restricts instantiation to basic data types, preventing the execution of malicious gadget chains. Always ensure input validation and consult language-specific security documentation.

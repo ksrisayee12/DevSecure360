@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Using user input as a format string in printf-like functions allows memory read/write.
+
+rule_id: php_format_string_printf
+language: php
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Format String Vulnerability in printf() or sprintf()
+message: |-
+  Passing user input directly as the format string argument in printf() allows attackers to read variables and potentially manipulate program state through format string exploits.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- printf(
+- sprintf(
+sanitizers:
+- '%s'
+remediation: |-
+  Always use a static format string.
+
+  UNSAFE: printf($_GET['msg']);
+  SAFE: printf("%s", $_GET['msg']); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — config detection
+# Semgrep Source:  https://semgrep.dev/r?q=cors
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Using wildcard (*) for CORS Access-Control-Allow-Origin exposes APIs to cross-origin attacks. Tentative.
+
+rule_id: php_cors_wildcard_header
+language: php
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: 'CORS Misconfiguration: Wildcard header()'
+message: |-
+  Outputting `header("Access-Control-Allow-Origin: *")` allows any external domain to make cross-origin requests and read sensitive PHP API responses.
+sources: []
+sinks:
+- 'header("Access-Control-Allow-Origin: *")'
+sanitizers:
+- in_array($_SERVER['HTTP_ORIGIN']
+remediation: |-
+  Check the $_SERVER['HTTP_ORIGIN'] against a strict array of permitted domains, and echo it back if it matches. Always review your code and apply strict validation. Consult secure coding best practices.

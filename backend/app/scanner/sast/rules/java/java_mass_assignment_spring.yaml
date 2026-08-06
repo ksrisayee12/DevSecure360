@@ -1,0 +1,29 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/915.html
+# CodeQL Source:   Not applicable — pattern-based ORM detection
+# Semgrep Source:  https://semgrep.dev/r?q=mass+assignment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
+# Verification:    Binding all request parameters to a model object allows updating unintended fields (e.g. isAdmin).
+
+rule_id: java_mass_assignment_spring
+language: java
+vuln_class: Mass Assignment
+severity: High
+cwe: CWE-915
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Mass Assignment via Spring MVC Model Binding
+message: |-
+  Binding an HTTP request directly to JPA Entity classes (e.g., @ModelAttribute or @RequestBody User user) allows an attacker to manipulate sensitive fields like roles or permissions.
+sources:
+- '@RequestBody User'
+- '@ModelAttribute User'
+sinks:
+- save(
+- update(
+sanitizers:
+- DTO
+remediation: |-
+  Create specific Data Transfer Objects (DTOs) for API inputs that only include the fields the user is allowed to update, rather than using Entity classes directly. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

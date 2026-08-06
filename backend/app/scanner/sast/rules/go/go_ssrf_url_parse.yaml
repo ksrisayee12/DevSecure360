@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    SSRF sinks verified from CodeQL standard libraries and official HTTP library documentation.
+
+rule_id: go_ssrf_url_parse
+language: go
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Tentative
+issue: SSRF vector via url.Parse
+message: |-
+  The application parses user input using `url.Parse()` which is subsequently used to build HTTP requests, posing a risk of Server-Side Request Forgery.
+sources: []
+sinks:
+- url.Parse(
+sanitizers: []
+remediation: |-
+  Thoroughly validate the parsed URL components (Scheme and Host) against an allowlist before using the resulting object in outbound network requests.

@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/362.html
+# CodeQL Source:   Not applicable — structural pattern detection
+# Semgrep Source:  Not applicable — CFG-based TOCTOU detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Signal handler and TOCTOU race patterns verified from CWE-362 and CERT C Coding Standard.
+
+rule_id: c_signal_handler_async_unsafe
+language: c
+vuln_class: Race Condition
+severity: High
+cwe: CWE-364
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 6.4
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Async-signal-unsafe function called inside signal handler — race condition
+  risk
+message: |-
+  A signal handler calls functions that are not async-signal-safe (e.g., malloc, free, printf, syslog). Signal handlers can interrupt any code at any point. If the main program is inside a non-reentrant function (like malloc) when the signal fires, calling the same function from the handler causes heap corruption, deadlock, or undefined behavior exploitable by attackers.
+sources: []
+sinks:
+- signal(
+- sigaction(
+sanitizers:
+- sig_atomic_t
+- async-signal-safe
+remediation: |-
+  Only call async-signal-safe functions from signal handlers. Set a flag and handle work in main.
+
+  UNSAFE:
+    void handler(int sig) {
+        printf("Signal received");  /* not async-signal-safe */
+        free(global_buf);           /* not async-signal-safe */
+    }
+
+  SAFE:
+    volatile sig_atomic_t signal_received = 0;
+    void handler(int sig) { signal_received = 1; }  /* only set flag */
+    /* Check flag and handle in main loop */
+
+  See POSIX async-signal-safe function list and CERT SIG30-C for complete guidance.

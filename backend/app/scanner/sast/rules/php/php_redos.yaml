@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1333.html
+# CodeQL Source:   Not applicable — pattern-based regex detection
+# Semgrep Source:  https://semgrep.dev/r?q=redos
+# OWASP Cheat:     https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+# Verification:    ReDoS detection is pattern-based on catastrophic backtracking regex literals. Rule is Tentative.
+
+rule_id: php_redos
+language: php
+vuln_class: ReDoS
+severity: Medium
+cwe: CWE-1333
+owasp: A03:2021-Injection
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Tentative
+issue: Regular Expression Denial of Service (ReDoS)
+message: |-
+  A regular expression with nested quantifiers is evaluated against untrusted input.
+sources: []
+sinks:
+- preg_match(
+- preg_replace(
+sanitizers: []
+remediation: |-
+  Avoid nested quantifiers like (a+)+ in regular expressions.
+
+  UNSAFE:
+    preg_match('/^(a+)+$/', $input);
+
+  SAFE:
+    // Use a simpler, non-backtracking regex

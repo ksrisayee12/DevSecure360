@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    User input in file paths without path sanitization allows arbitrary file read/write.
+
+rule_id: java_path_traversal_file
+language: java
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via java.io.File or Files.readAllBytes()
+message: |-
+  Using unvalidated user input to instantiate java.io.File or Path allows attackers to access sensitive files via directory traversal sequences (../).
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new File(
+- Files.readAllBytes(
+sanitizers:
+- FilenameUtils.getName(
+remediation: |-
+  Use Apache Commons IO FilenameUtils.getName() to extract only the filename. Ensure the canonical path of the file starts with the expected base directory. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    JWT bypass sinks verified from Semgrep registry and official JWT library documentation.
+
+rule_id: go_jwt_bypass
+language: go
+vuln_class: JWT Bypass
+severity: High
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: JWT Verification Bypass or Missing Signature Check
+message: |-
+  The application parses JSON Web Tokens without explicitly verifying the signature or algorithm, allowing attackers to forge tokens and bypass authentication.
+sources:
+- http.Request
+- r.URL.Query().Get(
+- r.FormValue(
+- r.PostFormValue(
+- r.Header.Get(
+- r.Cookie(
+- r.Body
+- os.Getenv(
+- os.Args[
+sinks:
+- jwt.ParseUnverified(
+- jwt.ParseWithClaims(
+sanitizers:
+- Keyfunc
+remediation: |-
+  Always verify the signature of JWTs by providing a robust Keyfunc that validates the signing method matches the expected algorithm (e.g., HMAC, RSA) and uses a securely stored key.

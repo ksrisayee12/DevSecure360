@@ -1,0 +1,37 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/16.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=session+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Insecure session configuration patterns verified from OWASP Session Management Cheat Sheet.
+
+rule_id: js_session_insecure_config
+language: javascript
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-16
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Express-session cookie missing Secure, HttpOnly, and SameSite security attributes
+message: |-
+  The Express.js session is configured without the Secure, HttpOnly, and SameSite cookie flags. A session cookie without Secure can be transmitted over unencrypted HTTP. Without HttpOnly the cookie is accessible to JavaScript, enabling theft via XSS. Without SameSite the session is vulnerable to cross-site request forgery on older CSRF-protected endpoints.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Configure express-session with full cookie security options.
+
+  UNSAFE:
+    app.use(session({ secret: "key", resave: false }));
+
+  SAFE:
+    app.use(session({
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: true, httpOnly: true, sameSite: "strict" }
+    }));
+
+  See OWASP Session Management Cheat Sheet for complete Node.js session hardening guidance.

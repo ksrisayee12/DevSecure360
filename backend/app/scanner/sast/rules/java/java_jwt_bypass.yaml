@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    JWT bypass sinks verified from Semgrep registry and official JWT library documentation.
+
+rule_id: java_jwt_bypass
+language: java
+vuln_class: JWT Bypass
+severity: High
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: JWT Verification Bypass
+message: |-
+  The application uses com.auth0.jwt.JWT.require() but fails to securely configure or enforce algorithms. Attackers can forge tokens.
+sources: []
+sinks:
+- JWT.require(
+sanitizers:
+- Algorithm.
+remediation: |-
+  Explicitly define and enforce the required algorithm when verifying JWTs.
+
+  UNSAFE:
+    JWT.require(null).build();
+
+  SAFE:
+    JWT.require(Algorithm.HMAC256(secret)).build();

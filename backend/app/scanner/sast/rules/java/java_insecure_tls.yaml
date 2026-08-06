@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/295.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/InsecureTrustManager.qll
+# Semgrep Source:  https://semgrep.dev/r/java.lang.security.audit.insecure-trust-manager
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    An empty checkServerTrusted method in X509TrustManager explicitly accepts all certificates.
+
+rule_id: java_insecure_tls
+language: java
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-295
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Insecure TLS Certificate Validation (TrustManager)
+message: |-
+  The application implements an X509TrustManager but leaves the checkClientTrusted or checkServerTrusted methods empty. This disables certificate validation, allowing Man-in-the-Middle (MitM) attacks.
+sources: []
+sinks:
+- implements X509TrustManager
+sanitizers:
+- checkServerTrusted(X509Certificate[]
+- checkClientTrusted(X509Certificate[]
+remediation: "Never disable TLS certificate validation in production. If a custom TrustManager is strictly required, it must perform actual validation against a trust store.\n\nUNSAFE:\n  public void checkServerTrusted(X509Certificate[] certs, String authType) {} \n\nSAFE:\n  // Do not override default TrustManager, or implement proper certificate pinning"

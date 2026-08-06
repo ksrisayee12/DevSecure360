@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=reflection+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Class.forName(userInput).newInstance() RCE via reflection verified from CodeQL Java standard libraries.
+
+rule_id: java_unsafe_reflection
+language: java
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via Class.forName(userInput).newInstance() — arbitrary class
+  instantiation via reflection
+message: |-
+  User-controlled input is passed to Class.forName() to dynamically load and instantiate a Java class. An attacker can specify any class available on the classpath, including ProcessBuilder, Runtime, or exploit gadgets from common libraries. Combined with method invocation via getDeclaredMethod(), this enables full remote code execution.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- Class.forName(request
+- Class.forName(param
+- Class.forName(header
+- .newInstance()
+sanitizers:
+- allowedClasses.contains(
+- Class.forName(SAFE_CLASS
+remediation: |-
+  Validate the class name against an allowlist before reflective instantiation.
+
+  UNSAFE:
+    Class<?> cls = Class.forName(request.getParameter("class"));
+    Object obj = cls.newInstance();
+
+  SAFE:
+    Set<String> allowed = Set.of("com.myapp.plugins.SafePlugin", "com.myapp.plugins.Other");
+    String className = request.getParameter("class");
+    if (!allowed.contains(className)) throw new SecurityException();
+    Class<?> cls = Class.forName(className);
+    Object obj = cls.newInstance();
+
+  Prefer a registered service factory (Spring DI) over reflection on user-controlled types. See OWASP Injection Prevention Cheat Sheet.

@@ -1,39 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/90.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=ldap+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html
+# Verification:    User input in LDAP queries without escaping enables auth bypass.
+
 rule_id: java_ldap_injection
 language: java
 vuln_class: LDAP Injection
-severity: High
+severity: Critical
 cwe: CWE-90
 owasp: A03:2021-Injection
-cvss_score: 7.5
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Confirmed
-issue: LDAP Injection via InitialDirContext search
+issue: LDAP Injection via unescaped string concatenation in InitialDirContext.search()
 message: |-
-  User input is used to dynamically construct LDAP search filters. Attackers can inject special characters to bypass authentication or extract unauthorized information.
+  Constructing LDAP filters dynamically with user input allows an attacker to alter the query logic, bypassing authentication or accessing unauthorized directory information.
 sources:
 - request.getParameter(
-- request.getParameterValues(
 - request.getHeader(
-- request.getHeaders(
-- request.getCookies(
-- request.getInputStream(
-- request.getReader(
-- request.getQueryString(
-- request.getPathInfo(
 - '@RequestParam'
 - '@PathVariable'
 - '@RequestBody'
-- '@RequestHeader'
-- '@CookieValue'
 sinks:
-- ctx.search(
-- dirContext.search(
-sanitizers: []
+- 'ctx.search(base, "(uid=" + '
+sanitizers:
+- search(base, filterExpr, filterArgs
 remediation: |-
-  Use parameterized LDAP queries (JNDI search controls) instead of string concatenation for search filters.
-
-  UNSAFE:
-    ctx.search("ou=users", "(uid=" + username + ")", controls);
+  Use parameterized LDAP queries or properly escape user input using an established library.
 
   SAFE:
-    ctx.search("ou=users", "(uid={0})", new Object[]{username}, controls);
+    ctx.search(base, "(uid={0})", new Object[]{userInput}, controls); Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,68 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/UnsafeReflection.qll
+# Semgrep Source:  https://semgrep.dev/r/python.lang.security.audit.unsafe-reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    globals()[userInput]() is a classic Python pattern for unsafe reflection leading to code execution.
+
+rule_id: python_insecure_reflection
+language: python
+vuln_class: Code Injection
+severity: High
+cwe: CWE-470
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Reflection / Object Instantiation (CWE-470)
+message: |-
+  The application uses globals(), locals(), or getattr() with user input to dynamically instantiate classes or call functions. This can lead to arbitrary code execution.
+sources:
+- request.args.get(
+- request.args[
+- request.form.get(
+- request.form[
+- request.json
+- request.get_json(
+- request.data
+- request.values.get(
+- request.values[
+- request.cookies.get(
+- request.cookies[
+- request.headers.get(
+- request.headers[
+- request.files.get(
+- request.stream
+- request.GET.get(
+- request.GET[
+- request.POST.get(
+- request.POST[
+- request.body
+- request.META.get(
+- request.COOKIES.get(
+- request.FILES.get(
+- Query(
+- Body(
+- Form(
+- Path(
+- Header(
+- Cookie(
+- os.environ.get(
+- os.environ[
+- os.getenv(
+- sys.argv[
+- input(
+sinks:
+- globals()[
+- locals()[
+- getattr(
+sanitizers: []
+remediation: |-
+  Do not use untrusted input to look up functions or classes in global/local scope or via getattr. Use an explicit map/dictionary of allowed functions.
+
+  UNSAFE:
+    func = globals()[request.args.get('action')]
+    func()
+
+  SAFE:
+    # Use a predefined dictionary map

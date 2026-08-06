@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/611.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xxe
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    XML parsers processing untrusted data without disabling DTDs allow XXE attacks.
+
+rule_id: java_xxe_documentbuilder
+language: java
+vuln_class: XXE
+severity: High
+cwe: CWE-611
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XXE via DocumentBuilderFactory
+message: |-
+  Parsing XML with DocumentBuilderFactory without actively disabling external DTDs and entities leaves the application vulnerable to XXE (XML External Entity) attacks.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- factory.newDocumentBuilder(
+sanitizers:
+- factory.setFeature(
+- DISALLOW_DOCTYPE_DECL
+remediation: |-
+  Explicitly call setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) on the DocumentBuilderFactory before parsing. Always ensure input validation and consult language-specific security documentation.

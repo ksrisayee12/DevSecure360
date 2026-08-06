@@ -1,0 +1,25 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/16.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html
+# Verification:    Misconfiguration detection is structural, checking for presence of insecure settings. Rule is Tentative.
+
+rule_id: php_misconfiguration
+language: php
+vuln_class: Misconfiguration
+severity: Low
+cwe: CWE-16
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Generic Security Misconfiguration
+message: |-
+  The application exposes server details via the X-Powered-By header or other similar mechanisms that leak backend technology details to attackers.
+sources: []
+sinks:
+- 'header(''X-Powered-By: PHP'')'
+sanitizers: []
+remediation: |-
+  Disable expose_php in php.ini instead of manually sending X-Powered-By headers. This prevents attackers from easily identifying the specific technology stack in use.

@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based template sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=server+side+template+injection
+# OWASP Cheat:     https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+# Verification:    Template engine sinks (FreeMarker, Velocity, Mako, Twig, Razor) verified from engine docs.
+
+rule_id: python_ssti_mako
+language: python
+vuln_class: SSTI
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Server-Side Template Injection via Mako Template() with user-controlled template
+  string
+message: |-
+  User-controlled input is passed as the template source to mako.template.Template(), allowing execution of arbitrary Python code. Mako templates support ${expression} and <%! import os %> blocks that evaluate Python. An attacker can inject ${__import__('os').system('id')} to execute arbitrary OS commands.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- Template(user
+- Template(request
+- mako.template.Template(
+sanitizers:
+- template.get_template(
+- environment.get_template(
+remediation: |-
+  Never render user-controlled strings as Mako template source. Load templates from trusted files.
+
+  UNSAFE:
+    from mako.template import Template
+    html = Template(request.args.get('tmpl')).render()  /* SSTI */
+
+  SAFE:
+    from mako.lookup import TemplateLookup
+    lookup = TemplateLookup(directories=['/app/templates'])
+    tmpl = lookup.get_template('page.html')  /* server-controlled template */
+    html = tmpl.render(name=user_name)  /* user data as variable */
+
+  See OWASP SSTI testing guide and Mako documentation on template security.

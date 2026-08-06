@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/319.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cleartext
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    Transmitting sensitive data over unencrypted protocols (HTTP/FTP) allows interception.
+
+rule_id: php_cleartext_ftp
+language: php
+vuln_class: Cleartext Transmission
+severity: High
+cwe: CWE-319
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Cleartext Transmission via ftp_connect()
+message: |-
+  Using ftp_connect() instead of ftp_ssl_connect() transmits authentication credentials and files in plaintext across the network.
+sources: []
+sinks:
+- ftp_connect(
+sanitizers:
+- ftp_ssl_connect(
+remediation: |-
+  Always use `ftp_ssl_connect()` for FTPS, or use the `ssh2_sftp` functions for SFTP encrypted transfers. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

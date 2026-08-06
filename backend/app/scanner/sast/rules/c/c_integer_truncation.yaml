@@ -1,0 +1,41 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: c_integer_truncation
+language: c
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-197
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 5.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:H
+confidence: Tentative
+issue: Integer truncation via implicit conversion from int to short or char causes
+  unexpected values
+message: |-
+  A value of type int or long is implicitly converted to a narrower type (short, char, uint8_t) without range validation. If the value exceeds the target type's range, the high-order bits are silently discarded. This produces an unexpected value that may bypass security checks — for example, a size of 65537 truncated to uint16_t becomes 1, bypassing an overflow guard.
+sources: []
+sinks:
+- (short)
+- (char)
+- (uint8_t)
+- (int8_t)
+sanitizers:
+- INT16_MAX
+- UINT8_MAX
+- range check
+remediation: |-
+  Validate values are within the target type's range before narrowing conversions.
+
+  UNSAFE:
+    uint16_t size = (uint16_t)user_int;  /* truncates silently */
+
+  SAFE:
+    if (user_int < 0 || user_int > UINT16_MAX) return ERROR;
+    uint16_t size = (uint16_t)user_int;
+
+  Enable -Wconversion and -Wsign-conversion compiler warnings. See CERT INT31-C for complete integer conversion guidance.

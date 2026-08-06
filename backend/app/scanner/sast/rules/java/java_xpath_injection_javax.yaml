@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: java_xpath_injection_javax
+language: java
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via javax.xml.xpath.XPath
+message: |-
+  Compiling dynamic XPath expression strings concatenated with unvalidated user input enables XPath injection, allowing data leakage or bypasses.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- xpath.compile(
+- xpath.evaluate(
+sanitizers:
+- XPathVariableResolver
+remediation: |-
+  Use an XPathVariableResolver to parameterize variables in the XPath query, or implement strict input validation. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

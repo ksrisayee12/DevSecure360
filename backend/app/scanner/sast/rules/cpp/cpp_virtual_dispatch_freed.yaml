@@ -1,0 +1,39 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/415.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based memory analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Double-free, dangling pointer, and virtual dispatch UAF patterns from CodeQL C/C++ libraries.
+
+rule_id: cpp_virtual_dispatch_freed
+language: cpp
+vuln_class: Use After Free
+severity: High
+cwe: CWE-416
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Use-After-Free via virtual method dispatch on deleted/freed C++ object
+message: |-
+  A virtual method is called on a pointer or reference to an object that has already been deleted. The vtable pointer in the freed memory may have been overwritten by a subsequent allocation. An attacker who controls heap layout can plant a fake vtable pointer at the freed location and redirect execution to arbitrary code when the virtual call is dispatched.
+sources: []
+sinks:
+- 'delete '
+- free(
+sanitizers:
+- nullptr check
+- shared_ptr
+remediation: |-
+  Use RAII and smart pointers to ensure objects are not used after deletion.
+
+  UNSAFE:
+    Base *obj = new Derived();
+    delete obj;
+    obj->virtualMethod();  /* UAF — obj points to freed memory */
+
+  SAFE:
+    std::unique_ptr<Base> obj = std::make_unique<Derived>();
+    /* obj automatically deleted at scope exit, cannot be used after */
+
+  Enable -D_GLIBCXX_DEBUG and AddressSanitizer for runtime detection. See CERT MEM50-CPP.

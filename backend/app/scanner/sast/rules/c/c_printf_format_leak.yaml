@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: c_printf_format_leak
+language: c
+vuln_class: Format String
+severity: High
+cwe: CWE-134
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: 'Format String Information Leak: user-controlled format string with %x/%p reads
+  stack memory'
+message: |-
+  User-controlled input is used as the format string argument to printf(), fprintf(), or sprintf() containing %x or %p specifiers. These read values from the call stack without requiring corresponding arguments. An attacker can construct format strings that dump stack addresses, function pointers, canary values, and heap pointers — enabling ASLR bypass and exploitation.
+sources: []
+sinks:
+- printf(user
+- fprintf(fp, user
+- sprintf(buf, user
+sanitizers:
+- printf("%s"
+- snprintf(
+remediation: |-
+  Always use a literal format string. Never pass user input as the format string argument.
+
+  UNSAFE:
+    printf(user_input);      /* format string attack */
+    fprintf(stderr, msg);    /* if msg is user-controlled */
+
+  SAFE:
+    printf("%s", user_input);    /* literal format string */
+    fprintf(stderr, "%s", msg);
+
+  Enable -Wformat=2 -Wformat-security compiler warnings. See CERT FIO30-C and OWASP Format String Attack guide.

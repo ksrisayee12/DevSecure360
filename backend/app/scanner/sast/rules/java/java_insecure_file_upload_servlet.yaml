@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/434.html
+# CodeQL Source:   Not applicable — pattern-based upload detection
+# Semgrep Source:  https://semgrep.dev/r?q=file+upload
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Missing extension and content validation on file uploads allows Remote Code Execution via web shells.
+
+rule_id: java_insecure_file_upload_servlet
+language: java
+vuln_class: File Upload
+severity: Critical
+cwe: CWE-434
+owasp: A04:2021-Insecure Design
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure File Upload via HttpServletRequest.getPart() without validation
+message: |-
+  Saving an uploaded file (Part.write()) without validating the file extension and MIME type allows an attacker to upload web shells (e.g., .jsp) and execute arbitrary code.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- request.getPart(
+- part.write(
+sanitizers:
+- FilenameUtils.getExtension(
+remediation: |-
+  Strictly validate the file extension against an allowlist and verify the content type before saving the file to disk. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

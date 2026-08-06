@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: csharp_unsafe_reflection_activator
+language: csharp
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Reflection via Activator.CreateInstance()
+message: |-
+  Instantiating types dynamically using Activator.CreateInstance() with user-controlled type names allows an attacker to instantiate dangerous classes (e.g., Process).
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Activator.CreateInstance(Type.GetType(
+sanitizers:
+- whitelist.Contains
+remediation: |-
+  Do not instantiate classes directly from user input. Map user inputs to safe, predefined types using a dictionary or switch statement. Always review your code and apply strict validation. Consult secure coding best practices.

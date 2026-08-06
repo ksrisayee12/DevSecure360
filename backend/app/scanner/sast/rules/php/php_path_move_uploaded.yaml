@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    include(), move_uploaded_file() path traversal sinks from php.net and Semgrep registry.
+
+rule_id: php_path_move_uploaded
+language: php
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Path Traversal via PHP move_uploaded_file() with user-controlled destination
+  path
+message: |-
+  The destination path passed to move_uploaded_file() incorporates the user-supplied filename without sanitization. An attacker can craft a filename with path traversal sequences (../../webroot/shell.php) to write the uploaded file to an arbitrary server location, potentially placing executable PHP scripts in web-accessible directories.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- move_uploaded_file(
+sanitizers:
+- basename(
+- realpath(
+remediation: |-
+  Extract only the basename of the uploaded filename and combine with a fixed server-controlled directory.
+
+  UNSAFE:
+    move_uploaded_file($_FILES["f"]["tmp_name"], "/uploads/" . $_FILES["f"]["name"]);
+
+  SAFE:
+    $safeName = basename($_FILES["f"]["name"]);
+    $dest = "/uploads/" . $safeName;
+    if (!str_starts_with(realpath($dest), realpath("/uploads/"))) die("Invalid");
+    move_uploaded_file($_FILES["f"]["tmp_name"], $dest);
+
+  Also validate file extension and MIME type. See OWASP File Upload Cheat Sheet.

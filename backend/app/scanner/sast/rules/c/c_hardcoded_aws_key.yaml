@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/798.html
+# CodeQL Source:   Not applicable — pattern-based literal string detection
+# Semgrep Source:  https://semgrep.dev/r?q=hardcoded+secret
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Hardcoded cloud provider API keys lead to immediate resource compromise.
+
+rule_id: c_hardcoded_aws_key
+language: c
+vuln_class: Hardcoded Secret
+severity: Critical
+cwe: CWE-798
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Hardcoded AWS Access Key ID
+message: |-
+  Hardcoding AWS access keys in source code allows an attacker to compromise cloud resources if the code is leaked, published, or extracted.
+sources: []
+sinks:
+- '"AKIA'
+- '''AKIA'
+sanitizers:
+- getenv(
+remediation: |-
+  Remove hardcoded AWS keys. Load credentials dynamically from environment variables, secure secret managers, or IAM roles. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/502.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/Deserialization.qll
+# Semgrep Source:  https://semgrep.dev/r?q=deserialization+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    XStream.fromXML, Yaml.load, ObjectMapper.enableDefaultTyping verified from CodeQL Java libraries.
+
+rule_id: java_deser_snakeyaml
+language: java
+vuln_class: Deserialization
+severity: Critical
+cwe: CWE-502
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Deserialization via SnakeYAML Yaml.load() without SafeConstructor
+message: |-
+  User-supplied YAML is deserialized by SnakeYAML's Yaml.load() without a SafeConstructor. SnakeYAML supports !!type tags that instantiate arbitrary Java classes. An attacker can embed !!javax.script.ScriptEngineManager or similar gadget payloads to execute arbitrary code on the server with the JVM process privileges.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- new Yaml().load(
+- yaml.load(
+sanitizers:
+- new Yaml(new SafeConstructor()
+remediation: |-
+  Use Yaml with SafeConstructor to prevent arbitrary class instantiation.
+
+  UNSAFE:
+    Object obj = new Yaml().load(userInput);
+
+  SAFE:
+    Object obj = new Yaml(new SafeConstructor()).load(userInput);
+
+  Never deserialize user-controlled YAML with the default Yaml() constructor. See OWASP Deserialization Cheat Sheet for SnakeYAML hardening guidance.

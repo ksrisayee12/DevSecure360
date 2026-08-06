@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/434.html
+# CodeQL Source:   Not applicable — structural file handling detection
+# Semgrep Source:  https://semgrep.dev/r?q=unrestricted+file+upload
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Unrestricted file upload without MIME/extension validation verified. Rule is Tentative.
+
+rule_id: go_file_upload_unrestricted
+language: go
+vuln_class: File Upload
+severity: High
+cwe: CWE-434
+owasp: A04:2021-Insecure Design
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Unrestricted file upload: uploaded file content type and extension not validated
+  in Go handler'
+message: |-
+  The Go HTTP handler accepts file uploads via r.FormFile() or r.MultipartForm without validating the file's content type, extension, or magic bytes. An attacker can upload executable scripts (.php, .sh, .go), web shells, or malicious binaries. If the upload directory is web-accessible or the file is later executed, this leads to remote code execution.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+- r.MultipartForm
+sinks:
+- r.FormFile(
+- r.MultipartForm
+- multipart.Reader
+sanitizers:
+- http.DetectContentType(
+- mime.ExtensionsByType(
+remediation: |-
+  Validate file content type using http.DetectContentType() and restrict allowed extensions.
+
+  UNSAFE:
+    file, _, _ := r.FormFile("upload")
+    os.Create("/uploads/" + header.Filename)  /* no validation */
+
+  SAFE:
+    file, header, _ := r.FormFile("upload")
+    buf := make([]byte, 512)
+    file.Read(buf)
+    contentType := http.DetectContentType(buf)
+    allowed := map[string]bool{"image/jpeg": true, "image/png": true}
+    if !allowed[contentType] { http.Error(w, "Invalid file type", 400); return }
+
+  Store uploads outside the web root. See OWASP File Upload Cheat Sheet.

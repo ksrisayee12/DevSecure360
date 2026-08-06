@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=zip+slip
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Zip-slip path traversal via archive entry names verified from Snyk Research (2018) and CodeQL.
+
+rule_id: php_zip_slip
+language: php
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Zip Slip path traversal via PHP ZipArchive::extractTo() without validating
+  entry names
+message: |-
+  The PHP application uses ZipArchive::extractTo() with an attacker-controlled archive without iterating and validating each entry's name for path traversal sequences. The PHP ZipArchive extension does not prevent ../ traversal in entry names by default. An attacker can write arbitrary files anywhere the web process has write permissions.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- $zip->extractTo(
+- ZipArchive::extractTo(
+sanitizers:
+- basename(
+- realpath(
+- ZipArchive::getNameIndex(
+remediation: |-
+  Iterate entries and validate each path before extraction with ZipArchive.
+
+  UNSAFE:
+    $zip = new ZipArchive();
+    $zip->open($userZip);
+    $zip->extractTo('/var/uploads/');  /* no path validation */
+
+  SAFE:
+    $target = realpath('/var/uploads/');
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $name = $zip->getNameIndex($i);
+        $dest = realpath($target . '/' . $name);
+        if (strpos($dest, $target) !== 0) die('Zip Slip detected');
+    }
+    $zip->extractTo($target);
+
+  See Snyk Zip Slip research and OWASP File Upload Cheat Sheet.

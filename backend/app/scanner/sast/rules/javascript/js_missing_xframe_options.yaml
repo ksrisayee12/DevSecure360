@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: js_missing_xframe_options
+language: javascript
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Frame-Options header in Express.js response allows clickjacking
+message: |-
+  The Express.js application does not set the X-Frame-Options response header, allowing the application to be embedded in iframes by any third-party website. Attackers can perform clickjacking by overlaying a transparent iframe on top of legitimate UI elements, causing authenticated users to unknowingly click hidden buttons that perform state-changing privileged operations.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Set X-Frame-Options using Helmet's frameguard middleware.
+
+  UNSAFE: No X-Frame-Options header in Express response pipeline.
+  SAFE:
+    const helmet = require("helmet");
+    app.use(helmet.frameguard({ action: "deny" }));
+
+  Alternatively configure the Content-Security-Policy frame-ancestors directive, which is more expressive and supported by modern browsers.

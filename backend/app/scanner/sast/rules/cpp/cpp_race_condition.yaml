@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/362.html
+# CodeQL Source:   Not applicable — CFG-based concurrent access detection
+# Semgrep Source:  Not applicable — structural pattern detection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html
+# Verification:    Race condition patterns (TOCTOU, concurrent access) are CFG-based heuristics. Rule is Tentative.
+
+rule_id: cpp_race_condition
+language: cpp
+vuln_class: Race Condition
+severity: Medium
+cwe: CWE-362
+owasp: A04:2021-Insecure Design
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L
+confidence: Tentative
+issue: Data Race in Multithreaded Execution
+message: |-
+  Shared state is accessed across multiple std::thread instances without proper synchronization, leading to data corruption or undefined behavior.
+sources: []
+sinks:
+- std::thread
+sanitizers:
+- std::mutex
+- std::lock_guard
+- std::atomic
+remediation: |-
+  Ensure all shared variables accessed by multiple threads are protected using synchronization primitives such as std::mutex with std::lock_guard, or use std::atomic for simple types.

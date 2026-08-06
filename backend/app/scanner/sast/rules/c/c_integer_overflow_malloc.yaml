@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — type inference required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Integer overflow without boundary checks can lead to buffer overflows or logic bypasses. Rule is Tentative.
+
+rule_id: c_integer_overflow_malloc
+language: c
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-190
+owasp: A04:2021-Insecure Design
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Integer Overflow leading to insufficient malloc allocation
+message: |-
+  Performing arithmetic (e.g., multiplication) directly inside a malloc() call without bounds checking can lead to integer overflow, resulting in a small allocation followed by a heap overflow.
+sources: []
+sinks:
+- malloc(size *
+- malloc(count *
+sanitizers:
+- if (size > MAX)
+remediation: |-
+  Check for integer overflows before allocating memory. Ensure that `size * count` does not exceed SIZE_MAX. Always review your code and apply strict validation. Consult secure coding best practices.

@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cookie
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Missing Secure or HttpOnly flags on session cookies exposes them to XSS and MitM theft.
+
+rule_id: java_cookie_insecure_servlet
+language: java
+vuln_class: Cookie Security
+severity: Medium
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: 'Cookie Security: Missing Secure/HttpOnly in javax.servlet.http.Cookie'
+message: |-
+  Adding a cookie to the HttpServletResponse without calling setSecure(true) and setHttpOnly(true) allows the cookie to be transmitted over HTTP and accessed via JavaScript.
+sources: []
+sinks:
+- new Cookie(
+- response.addCookie(
+sanitizers:
+- cookie.setSecure(true)
+- cookie.setHttpOnly(true)
+remediation: |-
+  Always invoke `setSecure(true)` and `setHttpOnly(true)` on Cookie objects before adding them to the response. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

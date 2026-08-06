@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    JWT bypass sinks verified from Semgrep registry and official JWT library documentation.
+
+rule_id: php_jwt_bypass
+language: php
+vuln_class: JWT Bypass
+severity: High
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: JWT Verification Bypass
+message: |-
+  The application uses firebase/php-jwt without enforcing a secure algorithm, allowing token forgery.
+sources: []
+sinks:
+- JWT::decode(
+sanitizers:
+- new Key(
+remediation: |-
+  Always pass a Key object with the explicit algorithm to JWT::decode.
+
+  UNSAFE:
+    JWT::decode($token, $secret, ['HS256']); // Deprecated
+
+  SAFE:
+    JWT::decode($token, new Key($secret, 'HS256'));

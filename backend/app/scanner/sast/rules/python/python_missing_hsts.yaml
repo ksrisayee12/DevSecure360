@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: python_missing_hsts
+language: python
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing HTTP Strict-Transport-Security (HSTS) header in Flask/Django response
+message: |-
+  The application does not set the Strict-Transport-Security response header, allowing browsers to access it over plain HTTP even when HTTPS is available. An attacker performing a man-in-the-middle attack can downgrade the connection to HTTP and intercept sensitive data including session cookies and credentials.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Add the Strict-Transport-Security header to all HTTPS responses with a max-age of at least 31536000 seconds and the includeSubDomains directive.
+
+  UNSAFE (Flask): No HSTS header set in after_request handler.
+  SAFE:
+    @app.after_request
+    def add_hsts(response):
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
+  See OWASP HTTP Headers Reference Cheat Sheet for complete configuration guidance.

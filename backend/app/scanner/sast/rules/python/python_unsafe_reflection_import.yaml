@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: python_unsafe_reflection_import
+language: python
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Reflection via __import__ or importlib
+message: |-
+  Loading Python modules dynamically using user input (e.g., __import__(user_input)) allows attackers to execute unintended code or exploit local file inclusion.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- __import__(
+- importlib.import_module(
+sanitizers:
+- allowed_modules
+remediation: |-
+  Avoid dynamic imports based on user input. Restrict imports to an explicit allowlist. Always review your code and apply strict validation. Consult secure coding best practices.

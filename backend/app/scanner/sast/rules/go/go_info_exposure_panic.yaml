@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Exposing stack traces or verbose debug messages to users facilitates reconnaissance. Rule is Tentative.
+
+rule_id: go_info_exposure_panic
+language: go
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure via unhandled Panic traces in HTTP handlers
+message: |-
+  Failing to implement a global recover middleware in HTTP servers allows panics to leak full stack traces to clients, revealing internal paths and logic.
+sources: []
+sinks:
+- panic(
+sanitizers:
+- recover()
+remediation: |-
+  Implement a recovery middleware (e.g., chi.Recoverer or custom defer recover) that intercepts panics, logs the stack trace internally, and returns a 500 status to the client. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

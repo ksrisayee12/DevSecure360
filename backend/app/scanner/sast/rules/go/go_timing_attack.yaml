@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/208.html
+# CodeQL Source:   Not applicable — pattern-based comparison detection
+# Semgrep Source:  https://semgrep.dev/r?q=timing+attack
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-constant-time comparison for cryptographic secrets detected structurally. Rule is Tentative.
+
+rule_id: go_timing_attack
+language: go
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-208
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: 'Timing attack: non-constant-time comparison of HMAC or security token with
+  bytes.Equal()'
+message: |-
+  The application uses bytes.Equal() or simple == comparison to verify HMACs, session tokens, or API keys. Go's bytes.Equal() short-circuits on the first differing byte, leaking the comparison duration via network timing. An attacker making millions of requests can statistically determine correct token bytes one at a time, forging valid HMAC signatures or tokens.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- bytes.Equal(
+- == string(
+sanitizers:
+- hmac.Equal(
+- subtle.ConstantTimeCompare(
+remediation: |-
+  Use crypto/subtle.ConstantTimeCompare() or hmac.Equal() for all HMAC and security token checks.
+
+  UNSAFE:
+    if bytes.Equal(providedMAC, expectedMAC) { /* timing leak */ }
+    if token == expectedToken { /* timing leak */ }
+
+  SAFE:
+    import "crypto/subtle"
+    if subtle.ConstantTimeCompare(providedMAC, expectedMAC) == 1 { /* OK */ }
+    // For HMAC specifically:
+    import "crypto/hmac"
+    if hmac.Equal(providedMAC, expectedMAC) { /* OK */ }
+
+  See Go crypto/subtle package docs and OWASP Cryptographic Storage Cheat Sheet.

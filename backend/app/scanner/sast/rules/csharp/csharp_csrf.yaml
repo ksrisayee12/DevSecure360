@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/352.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=csrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    CSRF detection checks for absence of CSRF middleware. Structural/absence-based. Rule is Tentative.
+
+rule_id: csharp_csrf
+language: csharp
+vuln_class: CSRF
+severity: High
+cwe: CWE-352
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Cross-Site Request Forgery (CSRF) Protection Missing
+message: |-
+  A controller handles state-changing HTTP requests (like POST, PUT, DELETE) without enforcing Anti-Forgery Token validation.
+sources: []
+sinks:
+- '[HttpPost]'
+- '[HttpPut]'
+- '[HttpDelete]'
+sanitizers:
+- '[ValidateAntiForgeryToken]'
+- '[AutoValidateAntiforgeryToken]'
+- '[IgnoreAntiforgeryToken]'
+remediation: |-
+  Apply the [ValidateAntiForgeryToken] attribute to all controller actions that modify state, and ensure forms include the @Html.AntiForgeryToken() helper to prevent CSRF attacks.

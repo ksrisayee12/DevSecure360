@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=second+order+sql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    Second-order SQLi via stored data re-used in raw query verified from CodeQL and OWASP testing guides.
+
+rule_id: python_second_order_sqli
+language: python
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: 'Second-Order SQL Injection: database-sourced value re-used in raw SQL query
+  without parameterization'
+message: |-
+  A value previously stored in the database is retrieved via cursor.fetchone() or a Django queryset and then concatenated into a raw SQL query string using cursor.execute() with string formatting. An attacker who stored a SQL injection payload in an earlier request can trigger it when the stored value is used in this second-order query.
+sources:
+- cursor.fetchone(
+- cursor.fetchall(
+- queryset.values(
+- result.scalar(
+sinks:
+- cursor.execute(f"
+- 'cursor.execute("SELECT.*%s" % '
+- connection.execute(f'
+sanitizers:
+- cursor.execute(sql, (
+- session.execute(text(sql), {
+remediation: |-
+  Parameterize every SQL query regardless of the data source.
+
+  UNSAFE:
+    row = cursor.fetchone()
+    cursor.execute(f"SELECT * FROM orders WHERE owner = '{row[0]}'")  /* second-order SQLi */
+
+  SAFE:
+    row = cursor.fetchone()
+    cursor.execute("SELECT * FROM orders WHERE owner = %s", (row[0],))
+
+  DB-sourced values are untrusted. Parameterize all dynamic SQL. See OWASP SQL Injection Prevention Cheat Sheet.

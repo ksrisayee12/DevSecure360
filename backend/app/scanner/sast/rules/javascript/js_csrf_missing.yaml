@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/352.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=csrf+disabled
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Disabling CSRF protection on web endpoints is a major risk. Rule is Tentative.
+
+rule_id: js_csrf_missing
+language: javascript
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-352
+owasp: A01:2021-Broken Access Control
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N
+confidence: Tentative
+issue: CSRF Protection missing in Express application
+message: |-
+  Failure to use a CSRF middleware (like csurf) leaves state-changing API endpoints vulnerable to Cross-Site Request Forgery if they rely on cookie-based authentication.
+sources: []
+sinks:
+- app.post(
+- app.put(
+sanitizers:
+- csurf(
+remediation: |-
+  Use the csurf middleware and implement anti-CSRF tokens, or use SameSite cookies. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

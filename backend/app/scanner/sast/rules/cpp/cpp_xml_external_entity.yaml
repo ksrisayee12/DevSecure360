@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/611.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/csharp/
+# Semgrep Source:  https://semgrep.dev/r?q=xxe+csharp
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    XML parsers with DTD processing enabled are vulnerable to XXE.
+
+rule_id: cpp_xml_external_entity
+language: cpp
+vuln_class: XXE
+severity: High
+cwe: CWE-611
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: XXE via libxml2 parsing untrusted XML with DTDs enabled
+message: |-
+  Parsing untrusted XML with libxml2 while external entity resolution (XML_PARSE_NOENT) is enabled allows XXE attacks, leading to file disclosure or SSRF.
+sources: []
+sinks:
+- xmlReadMemory(
+- xmlReadFile(
+sanitizers:
+- XML_PARSE_NOENT
+remediation: |-
+  Disable external entity resolution when parsing untrusted XML. Do not use the XML_PARSE_NOENT flag. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

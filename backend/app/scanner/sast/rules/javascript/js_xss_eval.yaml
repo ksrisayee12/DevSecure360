@@ -1,0 +1,37 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/79.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xss
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+# Verification:    XSS sinks verified from CodeQL standard libraries and OWASP XSS Prevention Cheat Sheet.
+
+rule_id: js_xss_eval
+language: javascript
+vuln_class: XSS
+severity: Critical
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via eval() or Similar Methods
+message: |-
+  Untrusted input is passed to eval(), new Function(), or setTimeout/setInterval with a string argument, leading to arbitrary JavaScript execution.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- eval(
+- new Function(
+- setTimeout(
+- setInterval(
+sanitizers: []
+remediation: |-
+  Never pass string arguments containing user input to eval(), new Function(), or timing functions. Pass functions as callbacks instead.

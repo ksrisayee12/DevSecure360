@@ -1,0 +1,49 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/434.html
+# CodeQL Source:   Not applicable — structural file handling detection
+# Semgrep Source:  https://semgrep.dev/r?q=unrestricted+file+upload
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Unrestricted file upload without MIME/extension validation verified. Rule is Tentative.
+
+rule_id: csharp_file_upload_unrestricted
+language: csharp
+vuln_class: File Upload
+severity: High
+cwe: CWE-434
+owasp: A04:2021-Insecure Design
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Unrestricted file upload: IFormFile processed without MIME type or extension
+  validation'
+message: |-
+  The ASP.NET Core controller accepts an IFormFile without validating the file's ContentType or extension. An attacker can upload .aspx, .cshtml, or .dll files. If the upload directory is served by IIS or the application reads and executes uploaded files, the attacker achieves server-side code execution via the uploaded web shell or assembly.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- Request.Body
+- HttpContext.Request
+sinks:
+- IFormFile
+- file.CopyTo(
+- file.CopyToAsync(
+sanitizers:
+- ContentType
+- Path.GetExtension(
+- allowedTypes
+remediation: |-
+  Validate ContentType and extension against an allowlist before saving uploaded files.
+
+  UNSAFE:
+    public async Task<IActionResult> Upload(IFormFile file) {
+        await file.CopyToAsync(new FileStream("/uploads/" + file.FileName, ...));
+    }
+
+  SAFE:
+    var allowed = new[] { ".jpg", ".png", ".pdf" };
+    var ext = Path.GetExtension(file.FileName).ToLower();
+    if (!allowed.Contains(ext) || !allowedMimes.Contains(file.ContentType))
+        return BadRequest("Invalid file type");
+
+  Store uploads outside the web root. Rename files to server-generated names. See OWASP File Upload Cheat Sheet.

@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/327.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=weak+crypto+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    rand(), mt_rand() and mcrypt_encrypt verified from php.net documentation.
+
+rule_id: php_weak_crypto_mcrypt
+language: php
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-327
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak Crypto via deprecated PHP mcrypt_encrypt() with insecure cipher (MCRYPT_DES
+  etc.)
+message: |-
+  The application uses the deprecated mcrypt extension with weak ciphers like MCRYPT_DES or MCRYPT_3DES. The mcrypt extension was deprecated in PHP 7.1 and removed in PHP 7.2 due to reliance on abandoned algorithms. DES has a 56-bit key and has been demonstrably broken. All data encrypted with these ciphers must be considered compromised.
+sources: []
+sinks:
+- mcrypt_encrypt(
+- mcrypt_decrypt(
+sanitizers:
+- openssl_encrypt(
+remediation: |-
+  Replace mcrypt with PHP's openssl extension using AES-256-GCM.
+
+  UNSAFE:
+    $enc = mcrypt_encrypt(MCRYPT_DES, $key, $data, MCRYPT_MODE_CBC);
+
+  SAFE:
+    $iv = random_bytes(openssl_cipher_iv_length("aes-256-gcm"));
+    $tag = "";
+    $enc = openssl_encrypt($data, "aes-256-gcm", $key, OPENSSL_RAW_DATA, $iv, $tag, "", 16);
+
+  mcrypt is removed in PHP 7.2+. See OWASP Cryptographic Storage Cheat Sheet for migration guidance.

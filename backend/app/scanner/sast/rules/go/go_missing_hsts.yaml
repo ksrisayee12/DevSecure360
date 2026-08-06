@@ -1,0 +1,36 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: go_missing_hsts
+language: go
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing Strict-Transport-Security (HSTS) header in Go net/http handler
+message: |-
+  The Go HTTP handler does not set the Strict-Transport-Security response header. Without HSTS, browsers that initially connect over HTTP will continue to do so even if HTTPS is available, leaving them open to SSL-stripping man-in-the-middle attacks. Intercepted connections expose session tokens, credentials, and private application data.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Set the HSTS header in a Go HTTP middleware applied globally.
+
+  UNSAFE: No HSTS header set in HTTP handlers.
+  SAFE:
+    func secureHeaders(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains")
+            next.ServeHTTP(w, r)
+        })
+    }
+
+  Consider using the unrolled/secure package which provides a comprehensive Go security headers middleware.

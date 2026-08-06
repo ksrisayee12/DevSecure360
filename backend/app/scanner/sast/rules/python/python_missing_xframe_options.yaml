@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: python_missing_xframe_options
+language: python
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Frame-Options header in Flask/Django response allows clickjacking
+  attacks
+message: |-
+  The application does not set the X-Frame-Options response header, allowing the application page to be embedded in an iframe on any external website. An attacker can perform a clickjacking attack by overlaying an invisible frame to trick authenticated users into clicking hidden UI elements and performing unintended privileged actions.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Add X-Frame-Options: DENY to all responses to prevent iframe embedding.
+
+  UNSAFE (Flask): No X-Frame-Options header in response.
+  SAFE:
+    @app.after_request
+    def add_xframe(response):
+        response.headers["X-Frame-Options"] = "DENY"
+        return response
+
+  Alternatively use the CSP frame-ancestors directive for modern browsers with finer-grained control.

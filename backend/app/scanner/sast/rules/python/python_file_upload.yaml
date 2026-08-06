@@ -1,0 +1,69 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/434.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/ArbitraryFileWrite.qll
+# Semgrep Source:  https://semgrep.dev/r/python.flask.security.audit.upload-file.upload-file
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    request.files and file.save() are standard Flask patterns for receiving and saving files without inherent type validation.
+
+rule_id: python_file_upload
+language: python
+vuln_class: File Upload
+severity: High
+cwe: CWE-434
+owasp: A04:2021-Insecure Design
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unrestricted Upload of File with Dangerous Type
+message: |-
+  The application allows users to upload files but does not adequately validate the file extension or type. An attacker could upload an executable file (like a .py or .php script) and execute arbitrary code.
+sources:
+- request.args.get(
+- request.args[
+- request.form.get(
+- request.form[
+- request.json
+- request.get_json(
+- request.data
+- request.values.get(
+- request.values[
+- request.cookies.get(
+- request.cookies[
+- request.headers.get(
+- request.headers[
+- request.files.get(
+- request.stream
+- request.GET.get(
+- request.GET[
+- request.POST.get(
+- request.POST[
+- request.body
+- request.META.get(
+- request.COOKIES.get(
+- request.FILES.get(
+- Query(
+- Body(
+- Form(
+- Path(
+- Header(
+- Cookie(
+- os.environ.get(
+- os.environ[
+- os.getenv(
+- sys.argv[
+- input(
+sinks:
+- request.files.get(
+- file.save(
+sanitizers:
+- secure_filename(
+remediation: |-
+  Ensure uploaded files have a verified safe extension and are stored outside the web root or with randomized names. Use werkzeug.utils.secure_filename.
+
+  UNSAFE:
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+
+  SAFE:
+    from werkzeug.utils import secure_filename
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))

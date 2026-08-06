@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/367.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/RaceCondition.qll
+# Semgrep Source:  https://semgrep.dev/r/java.lang.security.audit.os.path.exists.race-condition
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    file.exists() followed by new FileInputStream() is a TOCTOU race condition.
+
+rule_id: java_race_condition
+language: java
+vuln_class: Race Condition
+severity: Medium
+cwe: CWE-367
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:H/A:N
+confidence: Tentative
+issue: Time-of-check Time-of-use (TOCTOU) Race Condition (CWE-367)
+message: |-
+  The application checks for the existence of a file before operating on it. An attacker can replace the file between the check and the use.
+sources:
+- .exists()
+sinks:
+- new FileInputStream(
+- new FileOutputStream(
+- Files.delete(
+sanitizers: []
+remediation: |-
+  Do not check for file existence before opening it. Instead, attempt the operation and handle the resulting exceptions.
+
+  UNSAFE:
+    if (file.exists()) {
+        InputStream is = new FileInputStream(file);
+    }
+
+  SAFE:
+    try {
+        InputStream is = new FileInputStream(file);
+    } catch (FileNotFoundException e) {
+        // handle
+    }

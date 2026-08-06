@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/208.html
+# CodeQL Source:   Not applicable — pattern-based comparison detection
+# Semgrep Source:  https://semgrep.dev/r?q=timing+attack
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Non-constant-time comparison for cryptographic secrets detected structurally. Rule is Tentative.
+
+rule_id: python_timing_attack
+language: python
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-208
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.9
+cvss_vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: 'Timing attack: non-constant-time == comparison of HMAC digest or security
+  token'
+message: |-
+  The application compares an HMAC digest or security token using Python's == operator, which short-circuits on the first differing byte. Repeated HTTP requests with varying tokens allow an attacker to statistically measure response times and determine valid HMAC values one byte at a time, forging authentication tokens or webhook signatures without knowing the secret key.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.files
+sinks:
+- == hmac
+- == expected_token
+- digest() ==
+- hexdigest() ==
+sanitizers:
+- hmac.compare_digest(
+- secrets.compare_digest(
+remediation: |-
+  Use hmac.compare_digest() for all HMAC and security-token comparisons.
+
+  UNSAFE:
+    if provided_mac == hmac.new(key, msg, sha256).hexdigest():
+        pass  # timing leak
+
+  SAFE:
+    import hmac
+    expected = hmac.new(key, msg, 'sha256').hexdigest()
+    if hmac.compare_digest(provided_mac, expected):
+        pass  # constant-time
+
+  hmac.compare_digest() is always constant-time regardless of byte differences. See Python hmac docs and OWASP Cryptographic Storage Cheat Sheet.

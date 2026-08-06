@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    User-controlled URLs passed to HTTP clients lead to SSRF, allowing internal network scanning.
+
+rule_id: java_ssrf_httpurlconnection
+language: java
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Server-Side Request Forgery (SSRF) via HttpURLConnection or HttpClient
+message: |-
+  Passing user-provided URLs to HttpURLConnection.openConnection() or Java 11 HttpClient enables SSRF. Attackers can reach internal applications bypassing firewalls.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- url.openConnection()
+- HttpClient.newHttpClient().send(
+sanitizers:
+- java.net.URI
+remediation: |-
+  Parse the URL and validate the hostname against a strict allowlist. Resolve the IP address and ensure it is not a private IP before establishing the connection. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

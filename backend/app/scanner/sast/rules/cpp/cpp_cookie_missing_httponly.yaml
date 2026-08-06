@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cookie
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Missing Secure or HttpOnly flags on session cookies exposes them to XSS and MitM theft.
+
+rule_id: cpp_cookie_missing_httponly
+language: cpp
+vuln_class: Cookie Security
+severity: Medium
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: 'Cookie Security: Missing HttpOnly flag in C++ web frameworks'
+message: |-
+  Setting cookies in C++ HTTP servers (like Crow or Pistache) without the HttpOnly flag allows client-side scripts to access the cookie, exacerbating XSS attacks.
+sources: []
+sinks:
+- cookie.set(
+- res.set_cookie(
+sanitizers:
+- cookie.httponly = true
+remediation: |-
+  Configure the cookie object to enable the HttpOnly and Secure flags before adding it to the HTTP response. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

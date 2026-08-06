@@ -1,0 +1,40 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/916.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=pbkdf2+weak+iterations
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+# Verification:    NIST SP 800-132 recommends >=310,000 PBKDF2-SHA256 iterations as of 2023.
+
+rule_id: go_weak_pbkdf2
+language: go
+vuln_class: Weak Crypto
+severity: High
+cwe: CWE-916
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Weak key derivation via PBKDF2 with iteration count below NIST SP 800-132 minimum
+  (310,000)
+message: |-
+  The application uses golang.org/x/crypto/pbkdf2.Key() with an iteration count well below the NIST SP 800-132 (2023) recommended minimum of 310,000 for PBKDF2-SHA256. Low iteration counts allow attackers with access to hashed passwords to crack them significantly faster using GPU-based offline dictionary attacks. A count of 1,000 is 310x weaker than the minimum.
+sources: []
+sinks:
+- pbkdf2.Key(
+- golang.org/x/crypto/pbkdf2
+sanitizers:
+- bcrypt.GenerateFromPassword(
+- argon2.IDKey(
+remediation: |-
+  Use bcrypt (cost >= 12) or Argon2id instead of PBKDF2 for password storage, or set iterations >= 310,000.
+
+  UNSAFE:
+    dk := pbkdf2.Key(password, salt, 1000, 32, sha256.New)  /* far too low */
+
+  SAFE (PBKDF2 with NIST 2023 minimum):
+    dk := pbkdf2.Key(password, salt, 310000, 32, sha256.New)
+
+  BETTER (bcrypt — simpler and memory-hard):
+    hash, _ := bcrypt.GenerateFromPassword([]byte(password), 12)
+
+  See NIST SP 800-132, OWASP Password Storage Cheat Sheet, and golang.org/x/crypto/bcrypt docs.

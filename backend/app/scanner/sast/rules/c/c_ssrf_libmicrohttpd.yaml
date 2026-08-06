@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input passed to HTTP client libraries allows Server-Side Request Forgery.
+
+rule_id: c_ssrf_libmicrohttpd
+language: c
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via network socket connections
+message: |-
+  Taking a user-supplied IP address or hostname and directly connecting to it using socket() and connect() allows the application to be used as a proxy to attack internal networks.
+sources: []
+sinks:
+- connect(
+- getaddrinfo(
+sanitizers:
+- validate_ip_allowlist(
+remediation: |-
+  Resolve the user-provided hostname and strictly validate that the resulting IP address is not in a private or loopback range before establishing a connection. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

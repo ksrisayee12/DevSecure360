@@ -1,0 +1,51 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/semmle/javascript/security/dataflow/LogInjection.qll
+# Semgrep Source:  https://semgrep.dev/r/javascript.lang.security.audit.log-injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Vocabulary_Cheat_Sheet.html
+# Verification:    Passing untrusted data to logger functions allows newline injection.
+
+rule_id: js_log_injection
+language: javascript
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A03:2021-Injection
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Forging / Injection (CWE-117)
+message: |-
+  The application writes unsanitized user input into log files. Attackers can forge log entries.
+sources:
+- req.query.
+- req.query[
+- req.body.
+- req.body[
+- req.params.
+- req.params[
+- req.headers[
+- req.cookies.
+- req.cookies[
+- req.get(
+- request.query.
+- request.body.
+- request.params.
+- request.headers[
+- process.env.
+- process.argv[
+- readline.question(
+sinks:
+- logger.info(
+- logger.error(
+- logger.warn(
+- winston.info(
+sanitizers: []
+remediation: |-
+  Sanitize user input before writing it to logs, ensuring newline characters are stripped.
+
+  UNSAFE:
+    logger.info("User login: " + req.query.user);
+
+  SAFE:
+    // Strip newlines or use structured JSON logging

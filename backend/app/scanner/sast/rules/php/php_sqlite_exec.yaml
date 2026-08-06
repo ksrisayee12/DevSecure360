@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/89.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=sql+injection+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+# Verification:    oci_parse() and SQLite3::exec() SQLi sinks verified from official php.net documentation.
+
+rule_id: php_sqlite_exec
+language: php
+vuln_class: SQLi
+severity: Critical
+cwe: CWE-89
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: SQL Injection via PHP SQLite3::exec() or query() with user-controlled SQL string
+message: |-
+  User-controlled input is concatenated into an SQL query string passed to SQLite3::exec() or SQLite3::query(). SQLite3::exec() is particularly dangerous because it can execute multiple statements separated by semicolons. An attacker can inject additional SQL to read all tables, modify data, enable file I/O via ATTACH or loadextension, or drop tables.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_FILES[
+- $_COOKIE[
+sinks:
+- $sqlite->exec(
+- $db->exec(
+- $sqlite->query(
+- $db->query(
+sanitizers:
+- prepare(
+- bindValue(
+- bindParam(
+remediation: |-
+  Use SQLite3::prepare() with bound parameters instead of string concatenation.
+
+  UNSAFE:
+    $db->exec("DELETE FROM users WHERE id = " . $_GET['id']);
+    $db->query("SELECT * FROM orders WHERE user = '" . $_POST['user'] . "'");
+
+  SAFE:
+    $stmt = $db->prepare('SELECT * FROM orders WHERE user = :user');
+    $stmt->bindValue(':user', $_POST['user'], SQLITE3_TEXT);
+    $result = $stmt->execute();
+
+  See PHP SQLite3::prepare() documentation and OWASP SQL Injection Prevention Cheat Sheet.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: js_missing_xcontent_type
+language: javascript
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing X-Content-Type-Options header in Express.js response enables MIME sniffing
+message: |-
+  The Express.js application does not send the X-Content-Type-Options: nosniff header. Without this, browsers may MIME-sniff response content and execute it as a different type than declared. This is a significant risk when the application serves user-uploaded files, as a malicious file served as text/plain could be executed as JavaScript by the browser.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Enable the noSniff header via Helmet's noSniff middleware.
+
+  UNSAFE: No X-Content-Type-Options header in responses.
+  SAFE:
+    const helmet = require("helmet");
+    app.use(helmet.noSniff());
+    // Or helmet() applies noSniff automatically by default.
+
+  This header must be applied globally to all routes, especially those serving user-controlled content.

@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    SSRF sinks verified from CodeQL standard libraries and official HTTP library documentation.
+
+rule_id: go_ssrf_custom_client
+language: go
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Confirmed
+issue: SSRF via Custom HTTP Client
+message: |-
+  The application fetches resources based on user input using a custom HTTP client (`client.Do`, `client.Get`), creating an SSRF vulnerability.
+sources: []
+sinks:
+- client.Get(
+- client.Do(
+- client.Post(
+sanitizers: []
+remediation: |-
+  Validate user-provided URLs against a strict allowlist or configure the `Transport` layer to deny resolutions to internal/loopback IP addresses.

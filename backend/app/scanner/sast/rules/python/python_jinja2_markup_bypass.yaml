@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/79.html
+# CodeQL Source:   Not applicable — Python CodeQL limited
+# Semgrep Source:  https://semgrep.dev/r?q=jinja2+markup+xss
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+# Verification:    Jinja2 Markup() bypass of auto-escaping with user input verified from Jinja2 documentation.
+
+rule_id: python_jinja2_markup_bypass
+language: python
+vuln_class: XSS
+severity: High
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: XSS via Jinja2 Markup() class wrapping user-controlled input to bypass auto-escaping
+message: |-
+  User-controlled data is wrapped with Jinja2's Markup() or markupsafe.Markup() class before being passed to a template. Markup() marks a string as safe, causing the Jinja2 auto-escape engine to render it raw without HTML encoding. An attacker can inject <script>alert(1)</script> or event handlers that execute in the victim's browser.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- Markup(request
+- Markup(user
+- Markup(form
+- markupsafe.Markup(
+sanitizers:
+- escape(
+- Markup.escape(
+remediation: |-
+  Never wrap user input in Markup(). Pass it as a plain string and let Jinja2 auto-escape it.
+
+  UNSAFE:
+    from markupsafe import Markup
+    safe_name = Markup(request.args.get('name'))  /* bypasses auto-escape */
+    return render_template('page.html', name=safe_name)
+
+  SAFE:
+    name = request.args.get('name')  /* plain string — auto-escaped by Jinja2 */
+    return render_template('page.html', name=name)
+
+  Only use Markup() for values you have explicitly sanitized with Markup.escape() or bleach. See Jinja2 documentation on auto-escaping and OWASP XSS Prevention Cheat Sheet.

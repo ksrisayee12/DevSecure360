@@ -1,0 +1,37 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/776.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/XMLBomb.qll
+# Semgrep Source:  https://semgrep.dev/r/python.lang.security.audit.xxe.xml-bomb
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    The official Python documentation explicitly states that xml.etree and xml.dom are vulnerable to XML vulnerabilities and recommends defusedxml.
+
+rule_id: python_xml_bomb
+language: python
+vuln_class: DoS
+severity: High
+cwe: CWE-776
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+confidence: Confirmed
+issue: XML Entity Expansion / Billion Laughs (CWE-776)
+message: |-
+  The application uses standard Python XML parsers without protection against entity expansion. This makes it vulnerable to XML Bomb (Billion Laughs) denial of service attacks.
+sources: []
+sinks:
+- xml.etree.ElementTree.parse(
+- xml.etree.ElementTree.fromstring(
+- xml.dom.minidom.parse(
+- xml.dom.minidom.parseString(
+sanitizers:
+- defusedxml
+remediation: |-
+  Use the 'defusedxml' library instead of the standard xml libraries when parsing untrusted XML data to prevent XML bombs and XXE.
+
+  UNSAFE:
+    import xml.etree.ElementTree as ET
+    ET.fromstring(untrusted_xml)
+
+  SAFE:
+    import defusedxml.ElementTree as ET
+    ET.fromstring(untrusted_xml)

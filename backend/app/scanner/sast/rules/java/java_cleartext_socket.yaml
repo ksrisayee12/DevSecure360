@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/319.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cleartext
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    Transmitting sensitive data over unencrypted protocols (HTTP/FTP) allows interception.
+
+rule_id: java_cleartext_socket
+language: java
+vuln_class: Cleartext Transmission
+severity: High
+cwe: CWE-319
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Cleartext Transmission via plain java.net.Socket
+message: |-
+  Using a plain java.net.Socket to transmit sensitive data over the network exposes the payload to packet sniffing and MitM attacks.
+sources: []
+sinks:
+- new Socket(
+sanitizers:
+- SSLSocketFactory
+remediation: |-
+  Use `SSLSocketFactory.getDefault().createSocket()` to ensure the connection is encrypted via TLS. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

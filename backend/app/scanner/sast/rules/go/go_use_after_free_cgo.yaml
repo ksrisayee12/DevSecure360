@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/416.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Accessing a pointer after it has been freed leads to undefined behavior and potential RCE. Rule is Tentative.
+
+rule_id: go_use_after_free_cgo
+language: go
+vuln_class: Use After Free
+severity: High
+cwe: CWE-416
+owasp: A04:2021-Insecure Design
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Use After Free in CGO C.free()
+message: |-
+  Freeing a C pointer via C.free() in Go, but continuing to use the Go slice that aliases that memory, results in a Use After Free vulnerability.
+sources: []
+sinks:
+- C.free(
+sanitizers:
+- nil
+remediation: |-
+  Ensure that any Go slices or variables aliasing C memory are not accessed after C.free() is called. Always review your code and apply strict validation. Consult secure coding best practices.

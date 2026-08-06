@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/125.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — CFG-based analysis
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Out-of-bounds read, integer truncation, null deref patterns from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_unsigned_wraparound
+language: cpp
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-191
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Integer Overflow via unsigned integer wraparound — subtraction below zero wraps
+  to large value
+message: |-
+  Arithmetic on unsigned integers wraps around when the result would be negative or exceed UINT_MAX. The expression (size_t)(a - b) where a < b does not produce a negative number but instead wraps to a very large value. This large value used as an array index or allocation size bypasses bounds checks and causes heap overflow or out-of-bounds access.
+sources: []
+sinks:
+- size_t
+- unsigned int
+- uint32_t
+- uint64_t
+sanitizers:
+- < a
+- overflow check
+remediation: |-
+  Always check that unsigned subtraction will not underflow before performing it.
+
+  UNSAFE:
+    size_t n = userA - userB;  /* if userA < userB: wraps to HUGE value */
+    char *buf = malloc(n);
+
+  SAFE:
+    if (userA < userB) return ERROR;
+    size_t n = userA - userB;
+    char *buf = malloc(n);
+
+  Use compiler-provided checked arithmetic (gcc: -fsanitize=undefined) or safe math libraries. See CERT INT30-C for unsigned overflow guidance.

@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Path traversal sinks verified from CodeQL standard libraries and Semgrep registry.
+
+rule_id: go_path_traversal_os
+language: go
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via os package
+message: |-
+  The application passes user input directly to `os` package file operations (e.g., `os.Open`, `os.ReadFile`), allowing attackers to read or write arbitrary files on the filesystem.
+sources: []
+sinks:
+- os.Open(
+- os.ReadFile(
+- os.WriteFile(
+sanitizers: []
+remediation: |-
+  Sanitize user input using `filepath.Clean()` and ensure the resulting path remains within the intended, restricted directory scope before passing it to `os` functions.

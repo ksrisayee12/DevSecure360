@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/295.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/go/semmle/go/security/InsecureTls.qll
+# Semgrep Source:  https://semgrep.dev/r/go.lang.security.audit.tls-settings.tls-insecure-skip-verify
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html
+# Verification:    InsecureSkipVerify: true explicitly disables certificate verification in Go's crypto/tls.
+
+rule_id: go_insecure_tls
+language: go
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-295
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Insecure TLS Configuration
+message: |-
+  The application disables TLS certificate validation by setting InsecureSkipVerify to true. This allows Man-in-the-Middle (MitM) attacks.
+sources: []
+sinks:
+- 'InsecureSkipVerify: true'
+- InsecureSkipVerify:true
+sanitizers: []
+remediation: |-
+  Never disable TLS certificate validation in production. Remove the InsecureSkipVerify setting or set it to false.
+
+  UNSAFE:
+    tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+
+  SAFE:
+    tr := &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12}}

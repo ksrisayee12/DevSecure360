@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Path traversal sinks verified from CodeQL standard libraries and Semgrep registry.
+
+rule_id: go_path_traversal_ioutil
+language: go
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via ioutil package
+message: |-
+  The application passes user input to deprecated but common `ioutil` package functions (e.g., `ioutil.ReadFile`), enabling path traversal.
+sources: []
+sinks:
+- ioutil.ReadFile(
+- ioutil.WriteFile(
+sanitizers: []
+remediation: |-
+  Sanitize inputs using `filepath.Clean()` and ensure the path resolves within the allowed directory before calling `ioutil` (or the newer `os`) equivalents.

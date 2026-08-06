@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input passed to HTTP client libraries allows Server-Side Request Forgery.
+
+rule_id: python_ssrf_httpx
+language: python
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via httpx Client
+message: |-
+  Constructing an httpx.get() or httpx.AsyncClient().get() request with user-controlled URLs facilitates SSRF, enabling attacks on internal cloud metadata endpoints (e.g., AWS IMDS).
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- httpx.get(
+- client.get(
+sanitizers:
+- urllib.parse
+remediation: |-
+  Parse the URL and ensure the domain is present in an allowlist. Block any resolution to local or private IP ranges. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

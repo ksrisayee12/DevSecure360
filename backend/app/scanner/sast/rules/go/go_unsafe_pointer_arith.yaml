@@ -1,0 +1,42 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/119.html
+# CodeQL Source:   Not applicable — Go CodeQL limited for unsafe package
+# Semgrep Source:  https://semgrep.dev/r?q=unsafe+pointer+go
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Memory_Management_Cheat_Sheet.html
+# Verification:    unsafe.Pointer arithmetic in Go bypasses type safety guarantees. Rule is Tentative.
+
+rule_id: go_unsafe_pointer_arith
+language: go
+vuln_class: Memory Corruption
+severity: High
+cwe: CWE-119
+owasp: A06:2021-Vulnerable and Outdated Components
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Memory Corruption risk via unsafe.Pointer arithmetic bypassing Go's type-safety
+  guarantees
+message: |-
+  The application uses the unsafe package to perform pointer arithmetic (unsafe.Pointer + offset) or to cast between incompatible pointer types. Go's safety guarantees (bounds checking, garbage collector cooperation) do not apply to unsafe.Pointer operations. Incorrect arithmetic can cause out-of-bounds reads/writes, memory corruption, or garbage collector instability.
+sources: []
+sinks:
+- unsafe.Pointer(
+- unsafe.Add(
+- unsafe.SliceData(
+- uintptr(unsafe
+sanitizers:
+- reflect.SliceHeader
+- bounds check
+remediation: |-
+  Avoid unsafe.Pointer arithmetic. Use Go's safe type system, reflect, or encoding packages.
+
+  UNSAFE:
+    p := unsafe.Pointer(uintptr(base) + offset)  /* pointer arithmetic — no bounds check */
+    val := *(*int)(p)
+
+  SAFE:
+    // Use slice indexing with bounds checking
+    if offset >= len(slice) { return error }
+    val := slice[offset]
+
+  If unsafe is truly needed (CGo interop), document thoroughly and add explicit bounds validation. See Go unsafe package documentation and Go memory model specification.

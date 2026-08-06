@@ -1,0 +1,35 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/338.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/Random.qll
+# Semgrep Source:  https://semgrep.dev/r/java.lang.security.audit.insecure-randomness
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    java.util.Random is explicitly documented by Oracle as not cryptographically secure.
+
+rule_id: java_weak_crypto_randomness
+language: java
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-338
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Insecure Randomness via java.util.Random
+message: |-
+  The application uses java.util.Random or Math.random(), which are cryptographically weak pseudo-random number generators (PRNGs). If used in a security context like token generation, attackers can predict future random numbers.
+sources: []
+sinks:
+- new java.util.Random(
+- new Random(
+- Math.random(
+sanitizers: []
+remediation: |-
+  Use java.security.SecureRandom for generating cryptographically strong random numbers.
+
+  UNSAFE:
+    Random rand = new Random();
+    int token = rand.nextInt();
+
+  SAFE:
+    SecureRandom rand = new SecureRandom();
+    int token = rand.nextInt();

@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input used as a URL to make outgoing HTTP requests enables SSRF.
+
+rule_id: csharp_ssrf_webclient
+language: csharp
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via WebClient.DownloadString()
+message: |-
+  Using unvalidated user input as a URL in WebClient (DownloadString, DownloadData) allows SSRF, enabling unauthorized requests to internal network services.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- WebClient().DownloadString(
+- client.DownloadData(
+sanitizers:
+- Uri.IsWellFormedUriString(
+remediation: |-
+  Validate the destination URL against an allowlist. Ensure it uses HTTP/HTTPS and does not resolve to private, local, or loopback IP ranges. Always ensure input validation and consult language-specific security documentation.

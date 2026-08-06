@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   Not applicable — absence-based flag detection
+# Semgrep Source:  https://semgrep.dev/r?q=cookie+security
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Cookie security detection checks for absence of Secure/HttpOnly flags. Structural. Rule is Tentative.
+
+rule_id: go_cookie_security
+language: go
+vuln_class: Cookie Security
+severity: Low
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Insecure Cookie Configuration (Missing Secure/HttpOnly Flags)
+message: |-
+  The application sets cookies without the Secure or HttpOnly flags, making them vulnerable to interception over unencrypted networks or theft via Cross-Site Scripting (XSS).
+sources: []
+sinks:
+- http.Cookie{
+sanitizers:
+- 'Secure: true'
+- 'HttpOnly: true'
+remediation: |-
+  Always set the Secure and HttpOnly flags to true when creating sensitive cookies such as session identifiers or authentication tokens. This ensures cookies are only sent over HTTPS and are not accessible to JavaScript.

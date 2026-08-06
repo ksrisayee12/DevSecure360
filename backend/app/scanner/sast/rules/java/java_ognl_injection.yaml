@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=ognl+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    OGNL expression injection sinks verified from CVE-2017-5638, CVE-2018-11776 PoC and CodeQL.
+
+rule_id: java_ognl_injection
+language: java
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via OGNL expression evaluation with user-controlled expression
+  string (Apache Struts RCE)
+message: |-
+  User-controlled data is evaluated as an OGNL (Object-Graph Navigation Language) expression via Ognl.getValue() or OgnlContext evaluation. OGNL can access and invoke arbitrary Java methods through reflection. This vulnerability pattern was exploited in CVE-2017-5638 (Apache Struts 2 RCE via Content-Type header) to execute OS commands on servers worldwide.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+- request.getReader(
+sinks:
+- Ognl.getValue(
+- Ognl.parseExpression(
+- ognl.getValue(
+- new OgnlContext(
+sanitizers:
+- ValidationInterceptor
+- allowedExpressions
+remediation: |-
+  Never evaluate user-controlled strings as OGNL expressions. Upgrade Apache Struts immediately.
+
+  UNSAFE:
+    Object expr = Ognl.parseExpression(request.getHeader("Content-Type"));
+    Ognl.getValue(expr, context, root);
+
+  SAFE:
+    // Never use user input as OGNL expression source
+    // Upgrade to Apache Struts 2.5.33+ with fixed interceptor stack
+    // Apply security patches CVE-2017-5638, CVE-2018-11776 immediately
+
+  See CVE-2017-5638 advisory and Apache Struts Security Bulletins. Disable OGNL expression evaluation on untrusted data in all contexts.

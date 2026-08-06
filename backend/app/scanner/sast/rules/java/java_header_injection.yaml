@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/113.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=http+header+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    HTTP response header injection via setHeader/addHeader with user CR/LF verified from CodeQL Java.
+
+rule_id: java_header_injection
+language: java
+vuln_class: XSS
+severity: High
+cwe: CWE-113
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: HTTP Response Header Injection via HttpServletResponse.setHeader() with user-controlled
+  value
+message: |-
+  User-controlled data is written to an HTTP response header via HttpServletResponse.setHeader() or addHeader() without stripping CR (\r) and LF (\n) characters. An attacker can inject these characters to split the HTTP response, insert arbitrary headers (Set-Cookie, Location), or create a second response body, enabling XSS, session fixation, or cache poisoning.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+- request.getReader(
+sinks:
+- response.setHeader(
+- response.addHeader(
+- response.setContentType(
+sanitizers:
+- replace("\r",
+- replace("\n",
+remediation: |-
+  Strip CR and LF characters from all user-controlled values before writing to response headers.
+
+  UNSAFE:
+    response.setHeader("X-User", request.getParameter("name"));
+
+  SAFE:
+    String name = request.getParameter("name").replaceAll("[\r\n]", "");
+    response.setHeader("X-User", name);
+
+  Modern Servlet containers (Tomcat 9+) reject CR/LF in headers by default. Verify your container version and apply sanitization for legacy compatibility. See OWASP HTTP Response Splitting defense guide.

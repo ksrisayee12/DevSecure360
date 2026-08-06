@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=cookie
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Missing Secure or HttpOnly flags on session cookies exposes them to XSS and MitM theft.
+
+rule_id: python_cookie_insecure_flask
+language: python
+vuln_class: Cookie Security
+severity: Medium
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: 'Cookie Security: Missing httponly/secure in Flask set_cookie'
+message: |-
+  Calling set_cookie() in Flask or Django without specifying `secure=True` and `httponly=True` makes the cookie vulnerable to XSS and unencrypted network interception.
+sources: []
+sinks:
+- set_cookie(
+sanitizers:
+- secure=True
+- httponly=True
+remediation: |-
+  Always set `secure=True` and `httponly=True` when emitting cookies containing sensitive session data. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

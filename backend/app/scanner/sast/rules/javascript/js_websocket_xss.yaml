@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/79.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/
+# Semgrep Source:  https://semgrep.dev/r?q=websocket+xss
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html
+# Verification:    WebSocket message data injected into DOM without sanitization verified from CodeQL JS standard libraries.
+
+rule_id: js_websocket_xss
+language: javascript
+vuln_class: XSS
+severity: High
+cwe: CWE-79
+owasp: A03:2021-Injection
+cvss_score: 6.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+confidence: Confirmed
+issue: XSS via WebSocket message data inserted into DOM via innerHTML or document.write()
+message: |-
+  The application receives WebSocket messages and inserts event.data or ws.message directly into the DOM via innerHTML, outerHTML, or document.write() without sanitization. Any attacker who can influence WebSocket message content — via a MitM, XSS on the WebSocket server, or a rogue message origin — can inject arbitrary JavaScript.
+sources:
+- ws.onmessage
+- socket.on('message'
+- new WebSocket(
+sinks:
+- innerHTML =
+- document.write(
+- outerHTML =
+sanitizers:
+- DOMPurify.sanitize(
+- textContent =
+remediation: |-
+  Sanitize WebSocket data before DOM insertion or use safe DOM APIs.
+
+  UNSAFE:
+    ws.onmessage = (event) => {
+        document.getElementById('chat').innerHTML += event.data;  /* XSS */
+    };
+
+  SAFE:
+    ws.onmessage = (event) => {
+        const safe = DOMPurify.sanitize(event.data);
+        document.getElementById('chat').innerHTML += safe;
+        // Or use textContent for plain text only:
+        document.getElementById('chat').textContent += event.data;
+    };
+
+  Validate WebSocket origin and use structured JSON messages instead of raw HTML. See OWASP HTML5 Security Cheat Sheet.

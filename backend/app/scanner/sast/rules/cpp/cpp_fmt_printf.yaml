@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/134.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=format+string
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Format string vulnerable functions (printf, fprintf, sprintf, syslog) verified from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_fmt_printf
+language: cpp
+vuln_class: Format String
+severity: Critical
+cwe: CWE-134
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Format String Vulnerability in C++ printf
+message: |-
+  The C++ application uses the legacy printf() function and passes untrusted data directly as the format string argument.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- printf(
+sanitizers: []
+remediation: |-
+  Avoid legacy C functions. Use std::cout, std::format (C++20), or the fmt library for safe, typed formatting.

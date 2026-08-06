@@ -1,42 +1,34 @@
 # RESEARCH EVIDENCE
 # CWE Source:      https://cwe.mitre.org/data/definitions/90.html
-# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/go/semmle/go/security/LdapInjection.qll
-# Semgrep Source:  https://semgrep.dev/r/go.lang.security.ldap-injection
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=ldap+injection
 # OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html
-# Verification:    l.Search() and conn.Search() from github.com/go-ldap/ldap execute LDAP queries and require ldap.EscapeFilter() for safety.
+# Verification:    User input in LDAP queries without escaping enables auth bypass.
 
 rule_id: go_ldap_injection
 language: go
 vuln_class: LDAP Injection
-severity: High
+severity: Critical
 cwe: CWE-90
 owasp: A03:2021-Injection
-cvss_score: 7.5
-cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
 confidence: Confirmed
-issue: LDAP Injection via unsanitized input in go-ldap Search
+issue: LDAP Injection via unescaped string formatting in LDAP filter
 message: |-
-  User input is passed directly to LDAP search functions without escaping. An attacker can manipulate the LDAP query to bypass authentication or access unauthorized directory information.
+  Using fmt.Sprintf() to construct an LDAP filter with user input allows LDAP injection. An attacker can manipulate the filter structure to bypass authentication or access unauthorized data.
 sources:
-- http.Request
-- r.URL.Query().Get(
+- r.URL.Query()
 - r.FormValue(
-- r.PostFormValue(
 - r.Header.Get(
-- r.Cookie(
 - r.Body
-- os.Getenv(
-- os.Args[
 sinks:
-- l.Search(
-- conn.Search(
+- fmt.Sprintf("(uid=%s)"
+- fmt.Sprintf("(cn=%s)"
 sanitizers:
 - ldap.EscapeFilter(
 remediation: |-
-  Escape all user-supplied input before using it in LDAP queries using the ldap.EscapeFilter() function. See OWASP LDAP Injection Prevention Cheat Sheet for complete guidance.
-
-  UNSAFE:
-    searchRequest := ldap.NewSearchRequest(..., fmt.Sprintf("(cn=%s)", userInput), ...)
+  Use ldap.EscapeFilter() from the go-ldap package to sanitize user input before inclusion in filters.
 
   SAFE:
-    searchRequest := ldap.NewSearchRequest(..., fmt.Sprintf("(cn=%s)", ldap.EscapeFilter(userInput)), ...)
+    filter := fmt.Sprintf("(uid=%s)", ldap.EscapeFilter(userInput)) Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

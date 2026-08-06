@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based query string detection
+# Semgrep Source:  https://semgrep.dev/r?q=graphql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html
+# Verification:    GraphQL query string concatenation sinks verified from OWASP GraphQL Cheat Sheet and Semgrep.
+
+rule_id: js_graphql_injection
+language: javascript
+vuln_class: Code Injection
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: GraphQL Injection via user-controlled string concatenated into GraphQL query
+  body
+message: |-
+  User-controlled input is concatenated directly into a GraphQL query or mutation string before sending it to a GraphQL endpoint. An attacker can close the current field, inject additional fields or fragments, or escape to query/mutation level to access unauthorized types, bypass authorization directives, or exfiltrate schema information via introspection.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+sinks:
+- gql`
+- graphql(
+- '`query {'
+- '`mutation {'
+sanitizers:
+- 'variables:'
+- graphql(query, null, null, variables
+remediation: |-
+  Always use GraphQL variables for all user-supplied values — never concatenate user input into query strings.
+
+  UNSAFE:
+    const query = `{ user(id: "${userId}") { name email } }`;
+    client.query({ query: gql`${query}` });
+
+  SAFE:
+    const GET_USER = gql`query GetUser($id: ID!) { user(id: $id) { name email } }`;
+    client.query({ query: GET_USER, variables: { id: userId } });
+
+  Variables are serialized separately and never interpolated into the query string. See OWASP GraphQL Cheat Sheet and Apollo Client documentation.

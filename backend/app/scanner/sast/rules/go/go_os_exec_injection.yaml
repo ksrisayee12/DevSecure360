@@ -1,0 +1,38 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    OS command execution with shell=True or direct string passing allows RCE.
+
+rule_id: go_os_exec_injection
+language: go
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via os/exec passing user input to sh -c or cmd.exe /c
+message: |-
+  Passing user-controlled input to a shell command (sh -c or cmd.exe /c) using exec.Command() enables command injection. Attackers can execute arbitrary OS commands.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- exec.Command("sh", "-c"
+- exec.Command("cmd", "/c"
+- exec.Command("bash", "-c"
+sanitizers:
+- filepath.Clean(
+remediation: |-
+  Pass arguments directly to the executable instead of invoking a shell.
+
+  UNSAFE:
+    exec.Command("sh", "-c", "ping " + userIp)
+
+  SAFE:
+    exec.Command("ping", userIp) Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

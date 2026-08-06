@@ -1,0 +1,26 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/352.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=csrf+disabled
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Disabling CSRF protection on web endpoints is a major risk. Rule is Tentative.
+
+rule_id: python_csrf_exempt
+language: python
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-352
+owasp: A01:2021-Broken Access Control
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N
+confidence: Tentative
+issue: CSRF Protection Disabled via @csrf_exempt in Django
+message: |-
+  Applying the @csrf_exempt decorator to state-changing views (POST, PUT, DELETE) disables Django's built-in CSRF protection, leaving the application vulnerable to Cross-Site Request Forgery.
+sources: []
+sinks:
+- '@csrf_exempt'
+sanitizers:
+- csrf_protect
+remediation: |-
+  Remove @csrf_exempt from all state-changing endpoints that rely on session/cookie authentication. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

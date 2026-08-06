@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    User input in file paths without path sanitization allows arbitrary file read/write.
+
+rule_id: php_path_traversal_include
+language: php
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: Path Traversal and LFI via include(), require(), or file_get_contents()
+message: |-
+  Concatenating user input into file paths used in include(), require(), or file_get_contents() allows attackers to read sensitive files or execute local PHP files (Local File Inclusion).
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- include(
+- require(
+- file_get_contents(
+sanitizers:
+- basename(
+remediation: |-
+  Sanitize user input using basename() to strip directory traversal payloads. Validate against an allowlist of expected file names. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   Not applicable — structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Deserialization_Cheat_Sheet.html
+# Verification:    Loading classes or modules based on unvalidated user input enables arbitrary code execution.
+
+rule_id: java_unsafe_reflection_class_forname
+language: java
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A08:2021-Software and Data Integrity Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Unsafe Reflection via Class.forName()
+message: |-
+  Using unvalidated user input as the class name for Class.forName() allows attackers to instantiate arbitrary classes, bypassing application logic and potentially achieving RCE.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- Class.forName(
+sanitizers:
+- allowlist.contains(
+remediation: |-
+  Avoid reflective instantiation from user input. Map user inputs to safe classes using a strict allowlist. Always review your code and apply strict validation. Consult secure coding best practices.

@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/120.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=buffer+overflow
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Buffer overflow sinks (strcpy, strcat, gets, memcpy without size check) verified from CodeQL C/C++ standard libraries.
+
+rule_id: cpp_bof_memcpy
+language: cpp
+vuln_class: Buffer Overflow
+severity: Critical
+cwe: CWE-119
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Buffer Overflow via memcpy in C++
+message: |-
+  The C++ application uses memcpy() with user-controlled size parameters, bypassing C++ object models and potentially causing memory corruption.
+sources:
+- std::cin
+- std::getline
+- getenv
+- read
+- recv
+- ifstream
+- istream
+- stringstream
+sinks:
+- memcpy(
+sanitizers: []
+remediation: |-
+  Validate size parameters before calling memcpy(), or preferably use std::copy() or std::string for data manipulation.

@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/78.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=command+injection+environment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+# Verification:    getenv() result passed to system/execvp command execution sinks from CodeQL and Semgrep.
+
+rule_id: c_env_cmdi
+language: c
+vuln_class: CMDi
+severity: Critical
+cwe: CWE-78
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Command Injection via user-controlled environment variable passed to system()
+  or execvp()
+message: |-
+  The program reads a value from the environment using getenv() and passes it unsanitized to system(), popen(), or execvp(). An attacker who can control environment variables (via CGI, container environments, or privilege escalation) can inject arbitrary shell commands. This pattern is particularly dangerous in setuid programs where the attacker controls the env.
+sources:
+- getenv(
+- secure_getenv(
+sinks:
+- system(
+- popen(
+- execvp(
+- execl(
+sanitizers:
+- escapeshellarg
+remediation: |-
+  Never pass environment variable values directly to shell execution. Validate against allowlist.
+
+  UNSAFE:
+    char *path = getenv("USER_PATH");
+    system(path);  /* attacker controls USER_PATH */
+
+  SAFE:
+    char *path = getenv("USER_PATH");
+    if (!is_safe_path(path)) exit(1);
+    execv(safe_binary, safe_args);  /* not system() */
+
+  Unset dangerous env vars (PATH, LD_PRELOAD, IFS) in setuid programs. See CERT ENV33-C.

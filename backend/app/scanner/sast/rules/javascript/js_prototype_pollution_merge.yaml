@@ -1,0 +1,53 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1321.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/javascript/
+# Semgrep Source:  https://semgrep.dev/r?q=prototype+pollution
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html
+# Verification:    Object.assign/__proto__/constructor.prototype pollution sinks verified from CodeQL JS standard libraries.
+
+rule_id: js_prototype_pollution_merge
+language: javascript
+vuln_class: Prototype Pollution
+severity: High
+cwe: CWE-1321
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Prototype Pollution via deep object merge or assign with user-controlled __proto__
+  or constructor key
+message: |-
+  A deep merge or recursive assign function processes user-controlled objects without sanitizing keys. When user input contains __proto__, constructor.prototype, or Object.prototype as a key path, the merge writes to JavaScript's global object prototype. This corrupts all objects in the process, enabling property injection that bypasses authentication checks or alters application behavior application-wide.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- merge(
+- _.merge(
+- deepMerge(
+- Object.assign(dest
+- extend(target, source
+sanitizers:
+- hasOwnProperty(key)
+- Object.create(null)
+remediation: |-
+  Sanitize merge keys and use Object.create(null) targets to prevent prototype chain writes.
+
+  UNSAFE:
+    function merge(dst, src) {
+      for (let key in src) dst[key] = src[key];  /* writes to __proto__ */
+    }
+    merge({}, JSON.parse(req.body));  /* attacker sends {"__proto__":{"isAdmin":true}} */
+
+  SAFE:
+    function safeMerge(dst, src) {
+      for (let key of Object.keys(src)) {  /* own keys only */
+        if (key === '__proto__' || key === 'constructor') continue;
+        dst[key] = src[key];
+      }
+    }
+
+  Use lodash >= 4.17.21 which has built-in prototype pollution protection. See OWASP Prototype Pollution Prevention Cheat Sheet.

@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/csharp/
+# Semgrep Source:  https://semgrep.dev/r?q=reflection+csharp+user+input
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Type.GetType()/Assembly.Load() with user input enabling RCE via reflection from CodeQL C# standard library.
+
+rule_id: csharp_reflection_load_type
+language: csharp
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-470
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via Type.GetType(userInput) or Assembly.Load() with user-controlled
+  class name
+message: |-
+  User-controlled data is passed to Type.GetType(), Activator.CreateInstance(), or Assembly.Load() to dynamically instantiate a class by name. An attacker can specify a class name referencing a known gadget type (System.Diagnostics.Process, System.IO.File) to instantiate and invoke security-critical operations via reflection.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- Type.GetType(
+- Assembly.Load(
+- Activator.CreateInstance(
+- Assembly.LoadFrom(
+sanitizers:
+- allowedTypes.Contains(
+- Type.GetType(allowedName
+remediation: |-
+  Validate user-controlled type names against a strict allowlist before using reflection.
+
+  UNSAFE:
+    var type = Type.GetType(Request.Query["className"]);
+    Activator.CreateInstance(type);
+
+  SAFE:
+    var allowed = new HashSet<string> { "MyApp.Plugins.SafePlugin", "MyApp.Plugins.OtherPlugin" };
+    if (!allowed.Contains(Request.Query["className"])) throw new SecurityException();
+    var type = Type.GetType(Request.Query["className"]);
+    Activator.CreateInstance(type);
+
+  Prefer a registered service factory over reflection on arbitrary user-supplied types. See OWASP Injection Prevention Cheat Sheet.

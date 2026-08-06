@@ -1,0 +1,43 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/626.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=null+byte+path
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
+# Verification:    Null byte injection truncating file paths in C verified from CodeQL C++ libraries and CWE-626.
+
+rule_id: c_null_byte_injection
+language: c
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-626
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: 'Null Byte Injection in file path: \0 in user string truncates path at C string
+  functions'
+message: |-
+  User-controlled input containing a null byte (\x00) is used to construct a file path passed to fopen(), open(), or stat(). C string functions (strlen, strncpy) stop at the first null byte. An attacker can append \x00.jpg to a malicious path like /etc/shadow\x00.jpg to bypass file extension validation while the actual path used is /etc/shadow.
+sources: []
+sinks:
+- fopen(path
+- open(path
+- stat(path
+- access(path
+sanitizers:
+- strstr(path, "\x00")
+- memchr(
+remediation: |-
+  Reject any input containing null bytes and validate file paths after construction.
+
+  UNSAFE:
+    char path[256];
+    snprintf(path, sizeof(path), "/uploads/%s", user_input);
+    fopen(path, "r");  /* user_input may contain \x00 */
+
+  SAFE:
+    if (memchr(user_input, '\0', user_input_len) != NULL) return ERROR;
+    snprintf(path, sizeof(path), "/uploads/%s", user_input);
+    fopen(path, "r");
+
+  Use binary-safe path construction and validate the resulting canonical path. See CERT C FIO32-C.

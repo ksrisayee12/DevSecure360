@@ -1,3 +1,10 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/601.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=open+redirect
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html
+# Verification:    Unvalidated user input used in HTTP redirect headers leads to Open Redirect/Phishing.
+
 rule_id: go_open_redirect
 language: go
 vuln_class: Open Redirect
@@ -9,25 +16,15 @@ cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
 confidence: Confirmed
 issue: Open Redirect via http.Redirect()
 message: |-
-  User input controls the destination URL of an HTTP redirect. Attackers can construct links that redirect users to malicious websites.
+  Passing an unvalidated user-provided URL directly to http.Redirect() allows an attacker to redirect victims to malicious phishing sites, bypassing security filters.
 sources:
-- http.Request
-- r.URL.Query().Get(
+- r.URL.Query()
 - r.FormValue(
-- r.PostFormValue(
 - r.Header.Get(
-- r.Cookie(
 - r.Body
-- os.Getenv(
-- os.Args[
 sinks:
 - http.Redirect(
-sanitizers: []
+sanitizers:
+- allowed_urls[
 remediation: |-
-  Validate redirect URLs against a strict allowlist of permitted destinations.
-
-  UNSAFE:
-    http.Redirect(w, r, r.FormValue("next"), 302)
-
-  SAFE:
-    // Validate r.FormValue("next") is a safe, relative path before redirecting
+  Validate the target URL against an allowlist, or strictly ensure it is a relative path (e.g., starts with '/' but not '//') before redirecting. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

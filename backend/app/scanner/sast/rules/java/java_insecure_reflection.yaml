@@ -1,0 +1,45 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/470.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/UnsafeReflection.qll
+# Semgrep Source:  https://semgrep.dev/r/java.lang.security.audit.unsafe-reflection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Class.forName() with untrusted input is a classic Java unsafe reflection vector.
+
+rule_id: java_insecure_reflection
+language: java
+vuln_class: Code Injection
+severity: High
+cwe: CWE-470
+owasp: A03:2021-Injection
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Insecure Reflection / Object Instantiation (CWE-470)
+message: |-
+  The application instantiates a class where the class name is controlled by user input using Class.forName(). This can lead to arbitrary code execution if the attacker can instantiate malicious gadgets.
+sources:
+- request.getParameter(
+- request.getParameterValues(
+- request.getHeader(
+- request.getHeaders(
+- request.getCookies(
+- request.getInputStream(
+- request.getReader(
+- request.getQueryString(
+- request.getPathInfo(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+- '@RequestHeader'
+- '@CookieValue'
+sinks:
+- Class.forName(
+sanitizers: []
+remediation: |-
+  Never use user input directly as a class name for reflection. Use an explicit mapping or allowlist.
+
+  UNSAFE:
+    Class<?> clazz = Class.forName(request.getParameter("className"));
+
+  SAFE:
+    // Validate input against a trusted allowlist before reflecting.

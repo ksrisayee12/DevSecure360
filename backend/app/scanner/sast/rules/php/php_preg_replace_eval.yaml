@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — PHP CodeQL libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=preg_replace+e+modifier
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    preg_replace() /e modifier executes replacement as PHP code. Removed in PHP 7.0. Verified from php.net.
+
+rule_id: php_preg_replace_eval
+language: php
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via PHP preg_replace() with /e modifier evaluating replacement
+  as PHP code
+message: |-
+  The preg_replace() function is called with a pattern containing the /e (eval) modifier, which evaluates the replacement string as PHP code after performing substitution. User-controlled input that flows into the subject, replacement string, or pattern enables arbitrary PHP code execution. This modifier was deprecated in PHP 5.5 and removed in PHP 7.0.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+sinks:
+- preg_replace('/.*/e'
+- preg_replace("/.*/e"
+- preg_replace('/.*$/e'
+sanitizers:
+- preg_replace_callback(
+remediation: |-
+  Replace preg_replace() with /e modifier with preg_replace_callback() which does not eval.
+
+  UNSAFE:
+    preg_replace('/<tag>(.*)<\/tag>/e', 'strtoupper("$1")', $userInput);  /* RCE */
+
+  SAFE:
+    preg_replace_callback('/<tag>(.*)<\/tag>/',
+        function($matches) { return strtoupper($matches[1]); },
+        $userInput);
+
+  The /e modifier is completely removed in PHP 7.0+. If your codebase still uses it, upgrade PHP immediately and replace all /e patterns with preg_replace_callback(). See PHP migration guide 5.6→7.0 and OWASP Injection Prevention Cheat Sheet.

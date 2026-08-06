@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   Not applicable — pattern-based log sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=log+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
+# Verification:    Unsanitized CRLF characters in logs allow spoofing log entries (Log Forging).
+
+rule_id: python_log_injection_logging
+language: python
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A09:2021-Security Logging and Monitoring Failures
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Injection via python logging module
+message: |-
+  Concatenating user input into log messages allows an attacker to insert CRLF sequences and create deceptive log entries.
+sources:
+- request.args
+- request.form
+- request.data
+- request.json
+- request.GET
+- request.POST
+sinks:
+- logging.info(
+- logging.error(
+sanitizers:
+- input.replace
+remediation: |-
+  Sanitize log inputs by replacing `\n` and `\r` characters, or use a structured JSON logging formatter. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

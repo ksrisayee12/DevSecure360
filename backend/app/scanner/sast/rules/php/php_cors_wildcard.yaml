@@ -1,0 +1,47 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/942.html
+# CodeQL Source:   Not applicable — structural CORS header detection
+# Semgrep Source:  https://semgrep.dev/r?q=cors+wildcard
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
+# Verification:    CORS wildcard origin with credentials is forbidden by browser spec (RFC 6454). Rule is Tentative.
+
+rule_id: php_cors_wildcard
+language: php
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-942
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.4
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N
+confidence: Tentative
+issue: 'CORS Misconfiguration: PHP header() setting Access-Control-Allow-Origin to
+  * on authenticated endpoint'
+message: |-
+  The PHP application sets the Access-Control-Allow-Origin: * response header via header() on endpoints that return user-specific data or require authentication. Wildcard CORS allows any origin to read API responses in cross-origin requests. Combined with Allow-Credentials: true or a reflected Origin, this enables CORS-based data theft.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+sinks:
+- 'header(''Access-Control-Allow-Origin: *'')'
+- 'header("Access-Control-Allow-Origin: *")'
+sanitizers:
+- $allowed_origins
+- validateOrigin(
+remediation: |-
+  Validate the request Origin against an allowlist and reflect only permitted origins.
+
+  UNSAFE:
+    header('Access-Control-Allow-Origin: *');
+
+  SAFE:
+    $allowed = ['https://app.example.com', 'https://admin.example.com'];
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if (in_array($origin, $allowed, true)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+    }
+
+  Never reflect the Origin header without first validating it against the allowlist. See OWASP CORS configuration guide.

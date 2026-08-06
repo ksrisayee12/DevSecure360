@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/384.html
+# CodeQL Source:   Not applicable — PHP CodeQL libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=session+fixation+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    PHP session_id() with user-controlled SID enables session fixation. Rule is Tentative.
+
+rule_id: php_session_fixation
+language: php
+vuln_class: Cookie Security
+severity: High
+cwe: CWE-384
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: 'Session Fixation: PHP session_id() accepting user-controlled session identifier'
+message: |-
+  The application calls session_id() with a value derived from user input (GET/POST/Cookie) before session_start(). This allows an attacker to set a known session ID, wait for the victim to authenticate, and then use the pre-known session ID to impersonate the authenticated user — bypassing authentication without needing the victim's credentials.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+sinks:
+- session_id($_GET
+- session_id($_POST
+- session_id($_COOKIE
+- session_id($_REQUEST
+sanitizers:
+- session_regenerate_id(true
+- unset($_SESSION
+remediation: |-
+  Never accept a session ID from user input. Always regenerate the session ID after authentication.
+
+  UNSAFE:
+    session_id($_GET['sid']);  /* attacker controls the session ID */
+    session_start();
+
+  SAFE:
+    session_start();  /* PHP generates a secure random session ID */
+    // After successful login, regenerate to prevent fixation:
+    session_regenerate_id(true);
+
+  Set session.use_only_cookies=1 and session.use_strict_mode=1 in php.ini. See OWASP Session Management Cheat Sheet and PHP session security documentation.

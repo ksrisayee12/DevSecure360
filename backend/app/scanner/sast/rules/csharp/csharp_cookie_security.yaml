@@ -1,0 +1,29 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/614.html
+# CodeQL Source:   Not applicable — absence-based flag detection
+# Semgrep Source:  https://semgrep.dev/r?q=cookie+security
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+# Verification:    Cookie security detection checks for absence of Secure/HttpOnly flags. Structural. Rule is Tentative.
+
+rule_id: csharp_cookie_security
+language: csharp
+vuln_class: Cookie Security
+severity: Low
+cwe: CWE-614
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 4.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Insecure Cookie Configuration
+message: |-
+  The application creates cookies without explicitly configuring the Secure and HttpOnly flags, exposing them to theft via XSS or unencrypted network sniffing.
+sources: []
+sinks:
+- new HttpCookie(
+- Response.Cookies.Append(
+sanitizers:
+- Secure = true
+- HttpOnly = true
+- CookieOptions { Secure = true
+remediation: |-
+  Set the Secure and HttpOnly properties to true for all sensitive cookies. In ASP.NET Core, use CookieOptions to enforce these settings during the Response.Cookies.Append call.

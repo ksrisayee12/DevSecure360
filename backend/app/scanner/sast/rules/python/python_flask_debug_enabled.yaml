@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/489.html
+# CodeQL Source:   Not applicable — structural configuration detection
+# Semgrep Source:  https://semgrep.dev/r?q=debug+mode+production
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Debug mode enabled in production is a well-documented misconfiguration per OWASP.
+
+rule_id: python_flask_debug_enabled
+language: python
+vuln_class: Misconfiguration
+severity: High
+cwe: CWE-489
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Tentative
+issue: Flask application running with DEBUG=True exposing the interactive Werkzeug
+  debugger
+message: |-
+  The Flask application is started with debug=True or DEBUG=True in config. This activates the Werkzeug interactive debugger which exposes a Python console in the browser on any unhandled exception. An attacker who triggers an error can execute arbitrary Python code on the server with full application privileges, constituting critical remote code execution.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Disable debug mode for all production deployments. Control this via an environment variable, never hardcode it.
+
+  UNSAFE:
+    app.run(debug=True)
+    app.config["DEBUG"] = True
+
+  SAFE:
+    app.run(debug=os.environ.get("FLASK_DEBUG", "False") == "True")
+
+  In production, use a proper WSGI server (Gunicorn, uWSGI) rather than the built-in development server. Never commit debug=True to version control.

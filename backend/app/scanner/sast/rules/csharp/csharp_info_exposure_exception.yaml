@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/209.html
+# CodeQL Source:   Not applicable — structural error output pattern detection
+# Semgrep Source:  https://semgrep.dev/r?q=information+exposure
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
+# Verification:    Exposing stack traces or verbose debug messages to users facilitates reconnaissance. Rule is Tentative.
+
+rule_id: csharp_info_exposure_exception
+language: csharp
+vuln_class: Information Exposure
+severity: Low
+cwe: CWE-209
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+confidence: Tentative
+issue: Information Exposure via Exception.ToString() in API Responses
+message: |-
+  Returning the result of Exception.ToString() or Exception.Message to the client reveals internal stack traces and sensitive structural details.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- HttpContext.Request
+sinks:
+- return BadRequest(ex.ToString()
+- return StatusCode(500, ex.Message
+sanitizers:
+- logger.LogError
+remediation: |-
+  Catch exceptions, log the full details securely on the server, and return a generic error message to the API consumer. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/287.html
+# CodeQL Source:   Not applicable — pattern-based JWT decode detection
+# Semgrep Source:  https://semgrep.dev/r?q=jwt
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+# Verification:    Allowing the 'none' algorithm or skipping signature verification bypasses JWT authentication.
+
+rule_id: java_jwt_none_algorithm
+language: java
+vuln_class: JWT Bypass
+severity: Critical
+cwe: CWE-287
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: JWT Bypass via unverified parsing in jjwt or auth0
+message: |-
+  Calling Jwts.parser().parse(token) without verifying the signature (e.g., missing setSigningKey) allows an attacker to submit tampered JWTs successfully.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- Jwts.parser().parse(
+- JWT.decode(
+sanitizers:
+- setSigningKey(
+remediation: |-
+  Ensure the JWT parser is configured with a signing key (Jwts.parser().setSigningKey(key).parseClaimsJws(token)) to cryptographically verify tokens. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

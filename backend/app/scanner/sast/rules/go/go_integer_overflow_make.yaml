@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/190.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  Not applicable — type inference required
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    Integer overflow without boundary checks can lead to buffer overflows or logic bypasses. Rule is Tentative.
+
+rule_id: go_integer_overflow_make
+language: go
+vuln_class: Integer Overflow
+severity: High
+cwe: CWE-190
+owasp: A04:2021-Insecure Design
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: Integer Overflow in slice make() capacity
+message: |-
+  Using unvalidated arithmetic operations (e.g., multiplication) to determine the size/capacity of a slice in make() can wrap around on 32-bit systems, causing panics or memory corruption.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- make([]byte, size*
+- make([]int, size*
+sanitizers:
+- math.MaxInt32
+remediation: |-
+  Perform bounds checking on integers before using them in arithmetic operations for memory allocations. Always review your code and apply strict validation. Consult secure coding best practices.

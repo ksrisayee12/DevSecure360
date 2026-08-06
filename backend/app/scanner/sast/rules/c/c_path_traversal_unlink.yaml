@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Directory traversal in file delete/upload functions allows destructive actions or RCE.
+
+rule_id: c_path_traversal_unlink
+language: c
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.1
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H
+confidence: Confirmed
+issue: Arbitrary File Deletion via unlink()
+message: |-
+  Passing unvalidated user input to unlink() or remove() allows a directory traversal attack where an attacker can delete sensitive system or application files.
+sources: []
+sinks:
+- unlink(
+- remove(
+sanitizers:
+- realpath(
+- basename(
+remediation: |-
+  Ensure the file to be deleted is restricted to a specific directory by stripping directory sequences (e.g., using basename()) before passing to unlink(). Always ensure input validation and consult language-specific security documentation.

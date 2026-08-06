@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/643.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=xpath
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Unescaped user input in XPath expressions allows bypassing logic or reading arbitrary XML data.
+
+rule_id: js_xpath_injection_xpathjs
+language: javascript
+vuln_class: XPath Injection
+severity: High
+cwe: CWE-643
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: XPath Injection via xpath.select()
+message: |-
+  Dynamically constructing XPath expressions using template literals or string concatenation allows XPath injection in the node-xpath library.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- xpath.select(
+- xpath.evaluate(
+sanitizers:
+- escape(
+remediation: |-
+  Validate user input against an allowlist and ensure special characters like single quotes, double quotes, and slashes are not included in the XPath query string. Always review your code and apply strict validation and sanitization. Consult secure coding best practices.

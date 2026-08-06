@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/943.html
+# CodeQL Source:   Not applicable — pattern-based query string detection
+# Semgrep Source:  https://semgrep.dev/r?q=graphql+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html
+# Verification:    GraphQL query string concatenation sinks verified from OWASP GraphQL Cheat Sheet and Semgrep.
+
+rule_id: java_graphql_injection
+language: java
+vuln_class: Code Injection
+severity: High
+cwe: CWE-943
+owasp: A03:2021-Injection
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: GraphQL Injection via user-controlled string concatenated into GraphQL query
+  document
+message: |-
+  User-controlled input is concatenated into a GraphQL query document string before passing it to the GraphQL Java execution engine. An attacker can escape the current field context and inject additional fields, aliases, or fragments to access unauthorized data types, bypass field-level authorization decorators, or trigger expensive nested queries.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- ExecutionInput.newExecutionInput(
+- GraphQL.execute(
+- buildQuery(
+sanitizers:
+- variables(
+- ExecutionInput.newExecutionInput().variables(
+remediation: |-
+  Use GraphQL variables for all user-supplied values — never concatenate into query strings.
+
+  UNSAFE:
+    String query = "{ user(id: \"" + userId + "\") { name } }";
+    ExecutionInput input = ExecutionInput.newExecutionInput(query).build();
+
+  SAFE:
+    String query = "query GetUser($id: ID!) { user(id: $id) { name } }";
+    ExecutionInput input = ExecutionInput.newExecutionInput(query)
+        .variables(Map.of("id", userId)).build();
+
+  See OWASP GraphQL Cheat Sheet and graphql-java documentation on variables.

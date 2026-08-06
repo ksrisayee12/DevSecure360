@@ -1,0 +1,31 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    Unvalidated user input used as a URL to make outgoing HTTP requests enables SSRF.
+
+rule_id: go_ssrf_http_client_do
+language: go
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A01:2021-Broken Access Control
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+confidence: Confirmed
+issue: SSRF via http.Client.Do() or http.NewRequest()
+message: |-
+  Building an http.Request with an unvalidated user-supplied URL and executing it via http.Client.Do() allows Server-Side Request Forgery.
+sources:
+- r.URL.Query()
+- r.FormValue(
+- r.Header.Get(
+- r.Body
+sinks:
+- http.NewRequest(
+- client.Do(
+sanitizers:
+- url.Parse(
+remediation: |-
+  Parse the URL using net/url and ensure the hostname resolves strictly to public, non-internal IP addresses before initiating the request. Always ensure input validation and consult language-specific security documentation.

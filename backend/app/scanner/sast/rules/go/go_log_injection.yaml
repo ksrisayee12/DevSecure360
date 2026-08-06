@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/117.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/go/semmle/go/security/LogInjection.qll
+# Semgrep Source:  https://semgrep.dev/r/go.lang.security.log-injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Logging_Vocabulary_Cheat_Sheet.html
+# Verification:    Passing untrusted data to standard log functions allows newline injection.
+
+rule_id: go_log_injection
+language: go
+vuln_class: Log Injection
+severity: Medium
+cwe: CWE-117
+owasp: A03:2021-Injection
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N
+confidence: Confirmed
+issue: Log Forging / Injection (CWE-117)
+message: |-
+  The application writes unsanitized user input into log files. Attackers can forge log entries or inject malicious payloads.
+sources:
+- http.Request
+- r.URL.Query().Get(
+- r.FormValue(
+- r.PostFormValue(
+- r.Header.Get(
+- r.Cookie(
+- r.Body
+- os.Getenv(
+- os.Args[
+sinks:
+- log.Printf(
+- log.Println(
+- log.Print(
+- log.Fatal(
+- log.Panic(
+sanitizers: []
+remediation: |-
+  Sanitize or encode user input before writing it to logs, ensuring newline characters are stripped.
+
+  UNSAFE:
+    log.Printf("Login failed: %s", r.URL.Query().Get("user"))
+
+  SAFE:
+    // Strip newlines or use structured logging

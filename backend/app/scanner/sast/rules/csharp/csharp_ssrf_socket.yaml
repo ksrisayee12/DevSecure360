@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   Not applicable — pattern-based template sink detection
+# Semgrep Source:  https://semgrep.dev/r?q=server+side+template+injection
+# OWASP Cheat:     https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+# Verification:    Template engine sinks (FreeMarker, Velocity, Mako, Twig, Razor) verified from engine docs.
+
+rule_id: csharp_ssrf_socket
+language: csharp
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Confirmed
+issue: SSRF via new TcpClient() or Socket.Connect() with user-controlled hostname
+  and port
+message: |-
+  User-controlled hostname and port are passed to TcpClient() or Socket.Connect() to establish a network connection server-side. An attacker can supply internal hostnames or IP addresses to scan the internal network, connect to internal services (databases, admin interfaces), or perform port scanning against RFC 1918 addresses from within the trusted network.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- Request.Body
+- HttpContext.Request
+sinks:
+- new TcpClient(
+- new Socket(
+- socket.Connect(
+- TcpClient.Connect(
+sanitizers:
+- validateHost(
+- isAllowedEndpoint(
+remediation: |-
+  Validate the hostname and port against a strict allowlist before connecting.
+
+  UNSAFE:
+    var client = new TcpClient(Request.Query["host"], int.Parse(Request.Query["port"]));
+
+  SAFE:
+    var host = Request.Query["host"];
+    if (!allowedHosts.Contains(host)) throw new SecurityException("Blocked host");
+    var client = new TcpClient(host, allowedPort);
+
+  Block RFC 1918 ranges (10.x, 172.16-31.x, 192.168.x) and loopback. See OWASP SSRF Prevention Cheat Sheet.

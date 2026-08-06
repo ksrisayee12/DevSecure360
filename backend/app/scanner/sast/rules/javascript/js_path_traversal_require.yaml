@@ -1,0 +1,34 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    Path traversal sinks verified from CodeQL standard libraries and Semgrep registry.
+
+rule_id: js_path_traversal_require
+language: javascript
+vuln_class: Path Traversal
+severity: Critical
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Path Traversal / LFI via require()
+message: |-
+  User input controls the module path passed to require(), allowing Local File Inclusion (LFI) and potential arbitrary code execution.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+- window.location
+- document.cookie
+- process.argv
+- process.env
+sinks:
+- require(
+sanitizers: []
+remediation: |-
+  Never use unvalidated user input in require() calls. Use a strict allowlist mapping input strings to safe, hardcoded module paths.

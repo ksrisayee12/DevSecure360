@@ -1,0 +1,32 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/400.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=dos
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    Recursive entity expansion or unbounded decompression rapidly exhausts memory and CPU.
+
+rule_id: js_dos_regex_redos
+language: javascript
+vuln_class: DoS
+severity: Medium
+cwe: CWE-400
+owasp: A01:2021-Broken Access Control
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+confidence: Confirmed
+issue: Denial of Service via ReDoS in String.match()
+message: |-
+  Using statically defined but poorly constructed regular expressions with nested quantifiers against untrusted user input blocks the single-threaded Node.js event loop.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- event.data
+sinks:
+- match(/.+?/
+- test(/.+?/
+sanitizers:
+- safe-regex
+remediation: |-
+  Rewrite the regular expression to remove overlapping alternations and nested quantifiers, or use a linear-time regex library like re2. Always review your code and apply strict bounds or TLS configurations. Consult secure coding best practices.

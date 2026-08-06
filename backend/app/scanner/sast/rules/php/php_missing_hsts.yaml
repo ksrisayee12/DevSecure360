@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/693.html
+# CodeQL Source:   Not applicable — absence-based structural detection
+# Semgrep Source:  https://semgrep.dev/r?q=security+headers+misconfiguration
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Reference_Cheat_Sheet.html
+# Verification:    Security header absence detection is structural/pattern-based. Rule is Tentative.
+
+rule_id: php_missing_hsts
+language: php
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-693
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Missing Strict-Transport-Security (HSTS) header in PHP HTTP response
+message: |-
+  The PHP application does not send the Strict-Transport-Security response header. Without HSTS, browsers do not enforce HTTPS for subsequent requests, leaving users exposed to SSL-stripping man-in-the-middle attacks. An attacker positioned between the user and the server can intercept HTTP connections to steal session cookies and credentials.
+sources: []
+sinks: []
+sanitizers: []
+remediation: |-
+  Set the HSTS header on all PHP HTTPS responses in a central location.
+
+  UNSAFE: No Strict-Transport-Security header sent in responses.
+  SAFE:
+    header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+
+  Add this to a bootstrap file or front controller that runs on every request. Configure in web server (nginx/Apache) headers for best coverage.

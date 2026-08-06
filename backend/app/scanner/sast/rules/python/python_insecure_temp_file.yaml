@@ -1,0 +1,33 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/377.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/python/semmle/python/security/dataflow/InsecureTemporaryFile.qll
+# Semgrep Source:  https://semgrep.dev/r/python.lang.security.audit.insecure-tempfile-mktemp
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    tempfile.mktemp is officially documented as deprecated and insecure in the Python standard library docs.
+
+rule_id: python_insecure_temp_file
+language: python
+vuln_class: Misconfiguration
+severity: Medium
+cwe: CWE-377
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 5.3
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N
+confidence: Tentative
+issue: Insecure Temporary File Creation via mktemp()
+message: |-
+  The application uses tempfile.mktemp() which is deprecated and vulnerable to race conditions. An attacker can create a symlink with the predicted filename before the application creates the file, leading to arbitrary file overwrite or information disclosure.
+sources: []
+sinks:
+- tempfile.mktemp(
+sanitizers: []
+remediation: |-
+  Use tempfile.mkstemp() or tempfile.TemporaryFile() instead of mktemp(). These functions create the file securely and avoid race conditions.
+
+  UNSAFE:
+    filename = tempfile.mktemp()
+    with open(filename, 'w') as f: ...
+
+  SAFE:
+    fd, filename = tempfile.mkstemp()
+    with os.fdopen(fd, 'w') as f: ...

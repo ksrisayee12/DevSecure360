@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/94.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=expression+language+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+# Verification:    Spring EL and Roslyn expression evaluation sinks verified from CodeQL and Semgrep registry.
+
+rule_id: java_el_injection
+language: java
+vuln_class: Code Injection
+severity: Critical
+cwe: CWE-94
+owasp: A03:2021-Injection
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Code Injection via Spring EL (SpEL) expression evaluation with user-controlled
+  input
+message: |-
+  User-supplied input is passed to Spring Expression Language evaluation via ExpressionParser.parseExpression() or @Value annotation with external data. SpEL can access any Java class through reflection. An attacker can inject a SpEL expression like T(java.lang.Runtime).getRuntime().exec('id') to execute arbitrary OS commands.
+sources:
+- request.getParameter(
+- request.getHeader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- parser.parseExpression(
+- new SpelExpressionParser()
+- StandardEvaluationContext
+sanitizers:
+- SimpleEvaluationContext
+- setPropertyAccessors(
+remediation: |-
+  Use SimpleEvaluationContext with a restricted property accessor instead of StandardEvaluationContext.
+
+  UNSAFE:
+    ExpressionParser parser = new SpelExpressionParser();
+    Expression expr = parser.parseExpression(userInput);
+    Object result = expr.getValue();
+
+  SAFE:
+    SimpleEvaluationContext ctx = SimpleEvaluationContext
+        .forReadOnlyDataBinding().build();
+    Expression expr = parser.parseExpression("#this.name");
+    // userInput is passed as data, not as expression
+
+  Never evaluate user-controlled strings as SpEL expressions. See CVE-2018-1270 (Spring Messaging RCE).

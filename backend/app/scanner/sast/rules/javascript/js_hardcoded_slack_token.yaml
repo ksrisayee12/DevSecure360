@@ -1,0 +1,27 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/798.html
+# CodeQL Source:   Not applicable — pattern-based literal string detection
+# Semgrep Source:  https://semgrep.dev/r?q=hardcoded+secret
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+# Verification:    Hardcoded cloud provider API keys lead to immediate resource compromise.
+
+rule_id: js_hardcoded_slack_token
+language: javascript
+vuln_class: Hardcoded Secret
+severity: Critical
+cwe: CWE-798
+owasp: A07:2021-Identification and Authentication Failures
+cvss_score: 9.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: Hardcoded Slack Bot Token
+message: |-
+  A hardcoded Slack token (starting with xoxb- or xoxp-) allows attackers to hijack the bot, read private messages, or spam channels if the code is exposed.
+sources: []
+sinks:
+- '"xoxb-'
+- '"xoxp-'
+sanitizers:
+- process.env.
+remediation: |-
+  Never commit Slack tokens to source control. Load them via process.env.SLACK_TOKEN. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

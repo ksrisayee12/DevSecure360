@@ -1,0 +1,28 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/22.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/
+# Semgrep Source:  https://semgrep.dev/r?q=path+traversal
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+# Verification:    User input in file paths without path sanitization allows arbitrary file read/write.
+
+rule_id: cpp_path_traversal_fstream
+language: cpp
+vuln_class: Path Traversal
+severity: High
+cwe: CWE-22
+owasp: A01:2021-Broken Access Control
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: Path Traversal via std::ifstream or std::ofstream
+message: |-
+  Constructing file paths with unvalidated user input and opening them via std::ifstream allows directory traversal attacks to read arbitrary files.
+sources: []
+sinks:
+- std::ifstream(
+- std::ofstream(
+sanitizers:
+- std::filesystem::canonical(
+- basename(
+remediation: |-
+  Validate user input against an allowlist, or use std::filesystem::canonical to resolve the path and ensure it resides within the intended base directory. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/1236.html
+# CodeQL Source:   Not applicable — pattern-based formula character detection
+# Semgrep Source:  https://semgrep.dev/r?q=csv+injection
+# OWASP Cheat:     https://owasp.org/www-community/attacks/CSV_Injection
+# Verification:    CSV formula injection (=,+,@,-) detected as pattern-based code injection. Rule is Tentative.
+
+rule_id: js_csv_injection
+language: javascript
+vuln_class: Code Injection
+severity: High
+cwe: CWE-1236
+owasp: A03:2021-Injection
+cvss_score: 7.8
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H
+confidence: Tentative
+issue: 'CSV Formula Injection: user-controlled values starting with =,+,@,- create
+  executable formulas'
+message: |-
+  User-supplied data containing leading = + @ - characters is written to a CSV file without sanitization. When a victim opens the file in Microsoft Excel, Google Sheets, or LibreOffice Calc, the cell is interpreted as a formula. An attacker can embed =HYPERLINK() to exfiltrate data via DNS, =SYSTEM() macros to execute commands, or dynamic array formulas to steal data.
+sources:
+- req.body
+- req.query
+- req.params
+- req.headers
+- req.cookies
+sinks:
+- csvStringify(
+- json2csv(
+- .csv(
+- createObjectCsvWriter(
+sanitizers:
+- sanitizeCsvValue(
+remediation: |-
+  Sanitize values that start with formula characters before writing to CSV output.
+
+  UNSAFE:
+    const row = [userInput];  /* may start with =, +, @, - */
+    csvWriter.writeRecords([row]);
+
+  SAFE:
+    function sanitizeCsv(value) {
+      if (/^[=+@\-]/.test(String(value))) return "'" + value;
+      return value;
+    }
+    const row = [sanitizeCsv(userInput)];
+
+  Prefix dangerous values with a single quote to force text interpretation. See OWASP CSV Injection defense guide.

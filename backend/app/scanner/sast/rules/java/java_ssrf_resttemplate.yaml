@@ -1,0 +1,50 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/918.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/semmle/code/java/security/RequestForgery.qll
+# Semgrep Source:  https://semgrep.dev/r?q=ssrf+java
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+# Verification:    RestTemplate and WebClient SSRF sinks verified from CodeQL Java standard libraries.
+
+rule_id: java_ssrf_resttemplate
+language: java
+vuln_class: SSRF
+severity: High
+cwe: CWE-918
+owasp: A10:2021-Server-Side Request Forgery
+cvss_score: 8.6
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L
+confidence: Confirmed
+issue: Server-Side Request Forgery via Spring RestTemplate with user-controlled URL
+message: |-
+  User-controlled data constructs the URL passed to Spring RestTemplate methods such as getForEntity(), postForEntity(), or exchange(). An attacker can supply an internal network address or cloud metadata URL (e.g., http://169.254.169.254) to force the server to make requests to internal services, bypassing network access controls and firewall rules.
+sources:
+- request.getParameter(
+- request.getHeader(
+- request.getQueryString(
+- request.getInputStream(
+- request.getCookies(
+- request.getReader(
+- '@RequestParam'
+- '@PathVariable'
+- '@RequestBody'
+sinks:
+- restTemplate.getForEntity(
+- restTemplate.postForEntity(
+- restTemplate.exchange(
+- restTemplate.getForObject(
+sanitizers:
+- validateUrl(
+- isAllowedDomain(
+remediation: |-
+  Validate user-supplied URLs against an allowlist of permitted domains before calling RestTemplate.
+
+  UNSAFE:
+    String url = request.getParameter("url");
+    restTemplate.getForEntity(url, String.class);
+
+  SAFE:
+    String url = request.getParameter("url");
+    if (!isAllowedDomain(url)) throw new SecurityException("Disallowed URL");
+    restTemplate.getForEntity(url, String.class);
+
+  Block private IP ranges and cloud metadata endpoints. See OWASP SSRF Prevention Cheat Sheet.

@@ -1,0 +1,48 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/611.html
+# CodeQL Source:   Not applicable — PHP CodeQL standard libraries not available
+# Semgrep Source:  https://semgrep.dev/r?q=xxe+php
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    simplexml_load_string and DOMDocument::loadXML XXE sinks from OWASP XXE Cheat Sheet.
+
+rule_id: php_xxe_domdoc
+language: php
+vuln_class: XXE
+severity: High
+cwe: CWE-611
+owasp: A05:2021-Security Misconfiguration
+cvss_score: 7.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+confidence: Confirmed
+issue: XXE Injection via PHP DOMDocument::loadXML() with external entity processing
+  enabled
+message: |-
+  User-supplied XML is loaded via DOMDocument::loadXML() or ->load() without disabling external entity resolution. An attacker can craft a malicious XML document with an XXE payload to read local files, make internal HTTP requests (SSRF via Billion Laughs or external entity), or cause denial of service through recursive entity expansion attacks.
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+- $_SERVER[
+- $_FILES[
+- getallheaders(
+sinks:
+- ->loadXML(
+- ->load(
+- DOMDocument::loadXML(
+sanitizers:
+- libxml_disable_entity_loader(true
+- LIBXML_NONET
+remediation: |-
+  Disable external entity loading before using DOMDocument to parse untrusted XML.
+
+  UNSAFE:
+    $doc = new DOMDocument();
+    $doc->loadXML($userXml);
+
+  SAFE (PHP < 8.0):
+    libxml_disable_entity_loader(true);
+    $doc = new DOMDocument();
+    $doc->loadXML($userXml, LIBXML_NONET);
+
+  Apply LIBXML_NONET to prevent network entity resolution. See OWASP XXE Prevention Cheat Sheet.

@@ -1,0 +1,30 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/91.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/java/
+# Semgrep Source:  https://semgrep.dev/r?q=xslt+injection
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html
+# Verification:    XSLT processors evaluating user-controlled styles can execute code/read files.
+
+rule_id: php_xslt_injection
+language: php
+vuln_class: Code Injection
+severity: High
+cwe: CWE-91
+owasp: A03:2021-Injection
+cvss_score: 8.8
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+confidence: Confirmed
+issue: XSLT Injection via XSLTProcessor::importStylesheet() with user-controlled XSLT
+message: |-
+  Processing user-provided XSLT stylesheets can lead to code execution if PHP functions are registered via registerPHPFunctions().
+sources:
+- $_GET[
+- $_POST[
+- $_REQUEST[
+- $_COOKIE[
+sinks:
+- importStylesheet(
+sanitizers:
+- registerPHPFunctions()
+remediation: |-
+  Never process user-provided XSLT stylesheets. If XSLT processing is required, ensure registerPHPFunctions() is not called on the processor. Always review your code and apply strict bounds or input limitations. Use static analysis tools to verify fixes.

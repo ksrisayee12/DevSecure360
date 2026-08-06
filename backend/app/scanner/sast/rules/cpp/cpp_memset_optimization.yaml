@@ -1,0 +1,44 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/14.html
+# CodeQL Source:   https://codeql.github.com/codeql-standard-libraries/cpp/
+# Semgrep Source:  https://semgrep.dev/r?q=memset+optimization
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html
+# Verification:    memset() optimization removal pattern verified from CERT C MSC06-C and compiler analysis research.
+
+rule_id: cpp_memset_optimization
+language: cpp
+vuln_class: Weak Crypto
+severity: Medium
+cwe: CWE-14
+owasp: A02:2021-Cryptographic Failures
+cvss_score: 5.5
+cvss_vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N
+confidence: Tentative
+issue: Compiler may optimize away memset() clearing security-critical C++ buffers
+  before destruction
+message: |-
+  memset() called to zero a stack buffer holding a cryptographic key or password before the buffer goes out of scope may be eliminated by an optimizing C++ compiler (O1+). Since the memory is never subsequently read, the compiler correctly infers the write is dead code. The sensitive data persists in stack/heap memory accessible via use-after-free or dumps.
+sources: []
+sinks:
+- memset(passwd
+- memset(key
+- memset(secret
+- memset(buf, 0
+sanitizers:
+- OPENSSL_cleanse(
+- explicit_bzero(
+remediation: |-
+  Use OPENSSL_cleanse(), explicit_bzero(), or SecureZeroMemory() which are optimizer-resistant.
+
+  UNSAFE:
+    char key[32] = { /* ... */ };
+    memset(key, 0, sizeof(key));  /* may be eliminated by optimizer */
+
+  SAFE:
+    #include <openssl/crypto.h>
+    OPENSSL_cleanse(key, sizeof(key));  /* not eliminated */
+
+  SAFE (POSIX.1-2008):
+    explicit_bzero(key, sizeof(key));
+
+  Or use a RAII secure_string wrapper that calls OPENSSL_cleanse in its destructor. See CERT C++ MSC06-CPP and OWASP Cryptographic Storage Cheat Sheet.

@@ -1,0 +1,46 @@
+# RESEARCH EVIDENCE
+# CWE Source:      https://cwe.mitre.org/data/definitions/915.html
+# CodeQL Source:   Not applicable — structural binding detection
+# Semgrep Source:  https://semgrep.dev/r?q=mass+assignment
+# OWASP Cheat:     https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
+# Verification:    Mass assignment via json.Unmarshal, model binding without allowlist. Rule is Tentative.
+
+rule_id: csharp_mass_assignment_model
+language: csharp
+vuln_class: Mass Assignment
+severity: High
+cwe: CWE-915
+owasp: A04:2021-Insecure Design
+cvss_score: 6.5
+cvss_vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N
+confidence: Tentative
+issue: Mass Assignment via ASP.NET Core model binding without [BindNever] or explicit
+  allowlist
+message: |-
+  The ASP.NET Core controller action binds an HTTP POST body to a domain model without excluding privileged properties using [BindNever], [JsonIgnore], or a DTO/input model. An attacker can POST additional properties that map to fields like IsAdmin, Role, or AccountBalance, overwriting security-sensitive database fields through the model binder.
+sources:
+- Request.Query[
+- Request.Form[
+- Request.Headers[
+- Request.Body
+- HttpContext.Request
+sinks:
+- '[FromBody]'
+- '[FromForm]'
+- TryUpdateModelAsync(
+- UpdateModel(
+sanitizers:
+- '[BindNever]'
+- '[JsonIgnore]'
+- DTO
+remediation: |-
+  Use a dedicated DTO/input model with only the fields the user is permitted to set.
+
+  UNSAFE:
+    public IActionResult Update([FromBody] User user)  /* User has IsAdmin property */
+
+  SAFE:
+    public IActionResult Update([FromBody] UserUpdateDto dto)  /* No IsAdmin */
+    // Map DTO to User manually or with AutoMapper's ForMember restrictions.
+
+  Alternatively decorate privileged properties with [BindNever] or configure the model binder allowlist. See OWASP Mass Assignment Cheat Sheet.
